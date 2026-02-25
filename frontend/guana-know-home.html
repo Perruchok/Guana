@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guana — Guanajuato Cultural</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+
+</head>
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav>
+    <a href="#" class="nav-logo">Guana</a>
+    <div class="nav-links">
+      <a href="#directorio" class="nav-link">Directorio</a>
+      <a href="#" class="btn-outline" onclick="openRegister()">Regístrate</a>
+      <a href="#" class="btn-filled" style="margin-left:0.3rem">Entrar</a>
+    </div>
+  </nav>
+
+  <!-- ─── ACTIVE FILTERS BAR ─── -->
+  <div class="active-filters" id="activeFiltersBar">
+    <span>Filtros activos:</span>
+    <div id="activeFilterTags"></div>
+    <button onclick="clearFilters()" class="see-all" style="margin-left:0.5rem">Limpiar todo</button>
+  </div>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <p class="hero-eyebrow">Guanajuato, México — Agenda cultural</p>
+    <h1 class="hero-title">Lo que<br>pasa en <em>Gto.</em></h1>
+  </section>
+
+  <!-- ─── FEATURED SLIDER ─── -->
+  <section class="featured-section">
+    <div class="section-header">
+      <div>
+        <p class="section-label">Esta semana</p>
+        <h2 class="section-title">Destacados</h2>
+      </div>
+      <a href="#" class="see-all">Ver todos →</a>
+    </div>
+
+    <div class="slider-wrapper">
+      <div class="slider-track" id="sliderTrack">
+
+        <div class="featured-card" onclick="openEventModal('festival-cervantino')">
+          <div class="featured-card-placeholder" style="background: linear-gradient(135deg,#2A1A0A,#5C3A1A)">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V5h4V3h-6z"/></svg>
+          </div>
+          <div class="featured-card-overlay">
+            <div class="featured-card-tag">Música</div>
+            <div class="featured-card-title">Noche de Jazz en el Claustro</div>
+            <div class="featured-card-date">Sáb 1 Mar · 20:00 hrs</div>
+          </div>
+        </div>
+
+        <div class="featured-card" onclick="openEventModal('teatro-calderon')">
+          <div class="featured-card-placeholder" style="background: linear-gradient(135deg,#1A0A2A,#3A1A5C)">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+          </div>
+          <div class="featured-card-overlay">
+            <div class="featured-card-tag">Teatro</div>
+            <div class="featured-card-title">El Sueño de una Noche de Verano</div>
+            <div class="featured-card-date">Dom 2 Mar · 19:00 hrs</div>
+          </div>
+        </div>
+
+        <div class="featured-card" onclick="openEventModal('expo-galeria')">
+          <div class="featured-card-placeholder" style="background: linear-gradient(135deg,#0A1A2A,#1A3A5C)">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M21 3H3v18h18V3zm-2 16H5V5h14v14z M8 15l2.5-3 2 2.5 2.5-3L18 15H8z"/></svg>
+          </div>
+          <div class="featured-card-overlay">
+            <div class="featured-card-tag">Exposición</div>
+            <div class="featured-card-title">Fotografía Urbana: Barrios de Guanajuato</div>
+            <div class="featured-card-date">Lun–Dom · Todo el día</div>
+          </div>
+        </div>
+
+        <div class="featured-card" onclick="openEventModal('taller-ceramica')">
+          <div class="featured-card-placeholder" style="background: linear-gradient(135deg,#1A2A0A,#3A5C1A)">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          </div>
+          <div class="featured-card-overlay">
+            <div class="featured-card-tag">Taller</div>
+            <div class="featured-card-title">Taller de Cerámica para Principiantes</div>
+            <div class="featured-card-date">Vie 28 Feb · 10:00 hrs</div>
+          </div>
+        </div>
+
+        <div class="featured-card" onclick="openEventModal('cine-foro')">
+          <div class="featured-card-placeholder" style="background: linear-gradient(135deg,#2A1A0A,#5C4A1A)">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+          </div>
+          <div class="featured-card-overlay">
+            <div class="featured-card-tag">Cine</div>
+            <div class="featured-card-title">Cineforo: Nuevo Cine Mexicano</div>
+            <div class="featured-card-date">Jue 27 Feb · 18:30 hrs</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="slider-arrows">
+        <button class="slider-arrow" onclick="slide(-1)" aria-label="Anterior">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="slider-arrow" onclick="slide(1)" aria-label="Siguiente">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── EVENTOS ─── -->
+  <section class="eventos-section">
+    <div class="eventos-header">
+      <div>
+        <p class="section-label">Agenda</p>
+        <h2 class="section-title">Eventos</h2>
+        <div class="divider"></div>
+      </div>
+      <button class="btn-filter" id="filterBtn" onclick="openFilterModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filtrar
+        <span class="filter-dot"></span>
+      </button>
+    </div>
+
+    <div class="events-grid" id="eventsGrid">
+
+      <div class="event-card" onclick="openEventModal('festival-cervantino')">
+        <div class="event-card-img-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="event-card-body">
+          <div class="event-tags">
+            <span class="tag tag-music">Música</span>
+          </div>
+          <div class="event-card-title">Noche de Jazz en el Claustro</div>
+          <div class="event-card-date">Sáb 1 Mar · 20:00 hrs</div>
+        </div>
+      </div>
+
+      <div class="event-card" onclick="openEventModal('teatro-calderon')">
+        <div class="event-card-img-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="event-card-body">
+          <div class="event-tags">
+            <span class="tag tag-theater">Teatro</span>
+          </div>
+          <div class="event-card-title">El Sueño de una Noche de Verano</div>
+          <div class="event-card-date">Dom 2 Mar · 19:00 hrs</div>
+        </div>
+      </div>
+
+      <div class="event-card" onclick="openEventModal('expo-galeria')">
+        <div class="event-card-img-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="event-card-body">
+          <div class="event-tags">
+            <span class="tag tag-art">Exposición</span>
+          </div>
+          <div class="event-card-title">Fotografía Urbana: Barrios de Guanajuato</div>
+          <div class="event-card-date">Lun–Dom · Todo el día</div>
+        </div>
+      </div>
+
+      <div class="event-card" onclick="openEventModal('taller-ceramica')">
+        <div class="event-card-img-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="event-card-body">
+          <div class="event-tags">
+            <span class="tag tag-workshop">Taller</span>
+          </div>
+          <div class="event-card-title">Taller de Cerámica para Principiantes</div>
+          <div class="event-card-date">Vie 28 Feb · 10:00 hrs</div>
+        </div>
+      </div>
+
+      <div class="event-card" onclick="openEventModal('cine-foro')">
+        <div class="event-card-img-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="event-card-body">
+          <div class="event-tags">
+            <span class="tag tag-cinema">Cine</span>
+          </div>
+          <div class="event-card-title">Cineforo: Nuevo Cine Mexicano</div>
+          <div class="event-card-date">Jue 27 Feb · 18:30 hrs</div>
+        </div>
+      </div>
+
+      <div class="event-card" onclick="openEventModal('recorrido-callejones')">
+        <div class="event-card-img-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="event-card-body">
+          <div class="event-tags">
+            <span class="tag tag-default">Recorrido</span>
+          </div>
+          <div class="event-card-title">Recorrido por los Callejones Históricos</div>
+          <div class="event-card-date">Sáb 1 Mar · 11:00 hrs</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── DIRECTORIO ─── -->
+  <section class="directorio-section" id="directorio">
+    <div class="section-header">
+      <div>
+        <p class="section-label">Negocios locales</p>
+        <h2 class="section-title">Directorio</h2>
+        <div class="divider"></div>
+        <p class="directorio-desc" style="margin-top:0.6rem">Descubre los negocios y espacios que hacen de Guanajuato un lugar único.</p>
+      </div>
+      <a href="#" class="see-all">Ver directorio completo →</a>
+    </div>
+
+    <div class="directorio-list">
+
+      <a class="directorio-item" href="#">
+        <div class="directorio-avatar">LC</div>
+        <div class="directorio-info">
+          <div class="directorio-name">La Clave Café</div>
+          <div class="directorio-meta">
+            <span class="directorio-type-tag">Café</span>
+            Centro Histórico
+          </div>
+        </div>
+        <svg class="directorio-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a class="directorio-item" href="#">
+        <div class="directorio-avatar">BL</div>
+        <div class="directorio-info">
+          <div class="directorio-name">Barbería La Unión</div>
+          <div class="directorio-meta">
+            <span class="directorio-type-tag">Barbería</span>
+            Zona Centro
+          </div>
+        </div>
+        <svg class="directorio-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a class="directorio-item" href="#">
+        <div class="directorio-avatar">TM</div>
+        <div class="directorio-info">
+          <div class="directorio-name">Taquería El Mineral</div>
+          <div class="directorio-meta">
+            <span class="directorio-type-tag">Restaurante</span>
+            Mercado Hidalgo
+          </div>
+        </div>
+        <svg class="directorio-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a class="directorio-item" href="#">
+        <div class="directorio-avatar">GL</div>
+        <div class="directorio-info">
+          <div class="directorio-name">Galería Los Arcos</div>
+          <div class="directorio-meta">
+            <span class="directorio-type-tag">Galería</span>
+            Jardín Unión
+          </div>
+        </div>
+        <svg class="directorio-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="footer-brand">
+      <a href="#" class="nav-logo">Guana<span>·</span>Know</a>
+      <p class="footer-tagline">La agenda cultural de Guanajuato.<br>Hecho con ♥ en Gto.</p>
+    </div>
+    <div>
+      <p class="footer-col-title">Navegación</p>
+      <ul class="footer-links">
+        <li><a href="#">Inicio</a></li>
+        <li><a href="#directorio">Directorio</a></li>
+        <li><a href="#">Regístrate</a></li>
+        <li><a href="#">Entrar</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="footer-col-title">Contacto</p>
+      <ul class="footer-links">
+        <li><a href="mailto:hola@guanaknow.mx">hola@guanaknow.mx</a></li>
+        <li><a href="#">Instagram</a></li>
+      </ul>
+    </div>
+  </footer>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 Guana Know. Todos los derechos reservados.</span>
+    <a href="https://instagram.com" class="social-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      Síguenos
+    </a>
+  </div>
+
+  <!-- ─── FILTER MODAL ─── -->
+  <div class="modal-overlay" id="filterModal" onclick="handleOverlayClick(event,'filterModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Filtrar eventos</h2>
+          <p class="text-small" style="margin-top:0.3rem">Selecciona las opciones que quieras combinar.</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('filterModal')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-label">Tipo de evento</div>
+        <div class="filter-chips" id="categoryChips">
+          <button class="chip" data-filter="cat" data-value="música" onclick="toggleChip(this)">Música</button>
+          <button class="chip" data-filter="cat" data-value="artes escénicas" onclick="toggleChip(this)">Artes escénicas</button>
+          <button class="chip" data-filter="cat" data-value="cine" onclick="toggleChip(this)">Cine</button>
+          <button class="chip" data-filter="cat" data-value="cursos y talleres" onclick="toggleChip(this)">Cursos y talleres</button>
+          <button class="chip" data-filter="cat" data-value="deporte" onclick="toggleChip(this)">Deporte</button>
+          <button class="chip" data-filter="cat" data-value="exposiciones" onclick="toggleChip(this)">Exposiciones</button>
+          <button class="chip" data-filter="cat" data-value="infantiles" onclick="toggleChip(this)">Infantiles</button>
+          <button class="chip" data-filter="cat" data-value="salud" onclick="toggleChip(this)">Salud</button>
+          <button class="chip" data-filter="cat" data-value="literarios" onclick="toggleChip(this)">Eventos literarios</button>
+          <button class="chip" data-filter="cat" data-value="recorridos" onclick="toggleChip(this)">Recorridos</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-label">Fechas</div>
+        <div class="date-chips">
+          <button class="chip" data-filter="date" data-value="hoy" onclick="toggleChip(this)">Hoy</button>
+          <button class="chip" data-filter="date" data-value="mañana" onclick="toggleChip(this)">Mañana</button>
+          <button class="chip" data-filter="date" data-value="esta semana" onclick="toggleChip(this)">Esta semana</button>
+          <button class="chip" data-filter="date" data-value="este fin de semana" onclick="toggleChip(this)">Fin de semana</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-outline" style="flex:1" onclick="clearFilters()">Limpiar</button>
+        <button class="btn-filled" style="flex:2" onclick="applyFilters()">Aplicar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── EVENT DETAIL MODAL ─── -->
+  <div class="modal-overlay" id="eventModal" onclick="handleOverlayClick(event,'eventModal')">
+    <div class="modal" style="max-width:620px">
+      <div class="modal-header">
+        <div style="flex:1">
+          <div class="event-tags" id="modalEventTags" style="margin-bottom:0.5rem"></div>
+          <h2 class="event-modal-title" id="modalEventTitle"></h2>
+        </div>
+        <button class="modal-close" onclick="closeModal('eventModal')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="event-modal-img" id="modalEventImg">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+
+      <p class="event-modal-desc" id="modalEventDesc"></p>
+
+      <div class="event-meta-grid">
+        <div class="event-meta-item">
+          <div class="event-meta-label">Fecha</div>
+          <div class="event-meta-value" id="modalEventDate"></div>
+        </div>
+        <div class="event-meta-item">
+          <div class="event-meta-label">Hora</div>
+          <div class="event-meta-value" id="modalEventTime"></div>
+        </div>
+        <div class="event-meta-item">
+          <div class="event-meta-label">Lugar</div>
+          <div class="event-meta-value" id="modalEventVenue"></div>
+        </div>
+        <div class="event-meta-item">
+          <div class="event-meta-label">Contacto</div>
+          <div class="event-meta-value" id="modalEventContact"></div>
+        </div>
+      </div>
+
+      <div class="event-modal-actions">
+        <a href="#" class="btn-maps" id="modalMapsLink" target="_blank">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ¿Cómo llegar?
+        </a>
+        <button class="btn-share" onclick="shareEvent()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Compartir
+        </button>
+        <a href="#" class="btn-venue" id="modalVenueLink">
+          Ver lugar →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── JS ─── -->
+  <script>
+    // ── Event data (mock — replace with API calls) ──
+    const events = {
+      'festival-cervantino': {
+        title: 'Noche de Jazz en el Claustro',
+        description: 'Una velada íntima de jazz en vivo en uno de los patios más bellos del centro histórico. Artistas locales e invitados especiales se unen para una noche de improvisación y emoción musical.',
+        category: 'Música', tagClass: 'tag-music',
+        date: 'Sábado 1 de marzo', time: '20:00 hrs',
+        venue: 'Claustro de la Alhóndiga', contact: 'info@claustro.mx',
+        maps: 'https://maps.google.com/?q=Alhondiga+de+Granaditas+Guanajuato'
+      },
+      'teatro-calderon': {
+        title: 'El Sueño de una Noche de Verano',
+        description: 'La compañía Teatro Estudio presenta la obra clásica de Shakespeare adaptada al contexto cultural de Guanajuato, con vestuario y música originales.',
+        category: 'Teatro', tagClass: 'tag-theater',
+        date: 'Domingo 2 de marzo', time: '19:00 hrs',
+        venue: 'Teatro Juárez', contact: '473 732 0183',
+        maps: 'https://maps.google.com/?q=Teatro+Juarez+Guanajuato'
+      },
+      'expo-galeria': {
+        title: 'Fotografía Urbana: Barrios de Guanajuato',
+        description: 'Exposición colectiva de fotógrafos locales que capturan la vida cotidiana en los barrios de Guanajuato: sus callejones, mercados, y gente.',
+        category: 'Exposición', tagClass: 'tag-art',
+        date: 'Lunes a Domingo', time: '10:00 – 20:00 hrs',
+        venue: 'Galería Municipal', contact: 'galeria@gto.mx',
+        maps: 'https://maps.google.com/?q=Guanajuato+centro'
+      },
+      'taller-ceramica': {
+        title: 'Taller de Cerámica para Principiantes',
+        description: 'Aprende las técnicas básicas de modelado en arcilla con la maestra ceramista Ana Lozano. Incluye materiales. Cupo limitado a 10 personas.',
+        category: 'Taller', tagClass: 'tag-workshop',
+        date: 'Viernes 28 de febrero', time: '10:00 hrs',
+        venue: 'Estudio La Barro', contact: '473 100 2233',
+        maps: 'https://maps.google.com/?q=Guanajuato'
+      },
+      'cine-foro': {
+        title: 'Cineforo: Nuevo Cine Mexicano',
+        description: 'Proyección y debate de tres cortometrajes de cineastas mexicanos emergentes. Entrada libre. El foro es moderado por el colectivo Pantalla Abierta.',
+        category: 'Cine', tagClass: 'tag-cinema',
+        date: 'Jueves 27 de febrero', time: '18:30 hrs',
+        venue: 'Cineteca GTO', contact: 'cineteca@gto.mx',
+        maps: 'https://maps.google.com/?q=Guanajuato'
+      },
+      'recorrido-callejones': {
+        title: 'Recorrido por los Callejones Históricos',
+        description: 'Guía turístico certificado te lleva por las leyendas y secretos de los callejones más emblemáticos de la ciudad. Duración 2 horas. Punto de encuentro: Jardín Unión.',
+        category: 'Recorrido', tagClass: 'tag-default',
+        date: 'Sábado 1 de marzo', time: '11:00 hrs',
+        venue: 'Jardín Unión', contact: 'recorridos@guanaknow.mx',
+        maps: 'https://maps.google.com/?q=Jardin+Union+Guanajuato'
+      }
+    };
+
+    // ── Slider ──
+    function slide(dir) {
+      const track = document.getElementById('sliderTrack');
+      track.scrollBy({ left: dir * 360, behavior: 'smooth' });
+    }
+
+    // ── Modals ──
+    function openFilterModal() {
+      document.getElementById('filterModal').classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function handleOverlayClick(e, id) {
+      if (e.target.id === id) closeModal(id);
+    }
+
+    // ── Filter chips ──
+    const activeFilters = { cat: new Set(), date: new Set() };
+
+    function toggleChip(btn) {
+      const type = btn.dataset.filter;
+      const val  = btn.dataset.value;
+      btn.classList.toggle('selected');
+      if (btn.classList.contains('selected')) {
+        activeFilters[type].add(val);
+      } else {
+        activeFilters[type].delete(val);
+      }
+    }
+
+    function applyFilters() {
+      closeModal('filterModal');
+      const allActive = [...activeFilters.cat, ...activeFilters.date];
+      const bar  = document.getElementById('activeFiltersBar');
+      const tags = document.getElementById('activeFilterTags');
+      const btn  = document.getElementById('filterBtn');
+
+      tags.innerHTML = '';
+      if (allActive.length === 0) {
+        bar.classList.remove('visible');
+        btn.classList.remove('active');
+        return;
+      }
+
+      bar.classList.add('visible');
+      btn.classList.add('active');
+
+      allActive.forEach(f => {
+        const el = document.createElement('div');
+        el.className = 'active-filter-tag';
+        el.innerHTML = `${f} <button onclick="removeFilter('${f}')">×</button>`;
+        tags.appendChild(el);
+      });
+    }
+
+    function removeFilter(val) {
+      activeFilters.cat.delete(val);
+      activeFilters.date.delete(val);
+      // also deselect the chip
+      document.querySelectorAll('.chip').forEach(c => {
+        if (c.dataset.value === val) c.classList.remove('selected');
+      });
+      applyFilters();
+    }
+
+    function clearFilters() {
+      activeFilters.cat.clear();
+      activeFilters.date.clear();
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      applyFilters();
+      closeModal('filterModal');
+    }
+
+    // ── Event modal ──
+    function openEventModal(id) {
+      const e = events[id];
+      if (!e) return;
+
+      document.getElementById('modalEventTitle').textContent = e.title;
+      document.getElementById('modalEventDesc').textContent  = e.description;
+      document.getElementById('modalEventDate').textContent  = e.date;
+      document.getElementById('modalEventTime').textContent  = e.time;
+      document.getElementById('modalEventVenue').textContent = e.venue;
+      document.getElementById('modalEventContact').textContent = e.contact;
+      document.getElementById('modalMapsLink').href = e.maps;
+
+      const tagsEl = document.getElementById('modalEventTags');
+      tagsEl.innerHTML = `<span class="tag ${e.tagClass}">${e.category}</span>`;
+
+      document.getElementById('eventModal').classList.add('open');
+    }
+
+    function shareEvent() {
+      const title = document.getElementById('modalEventTitle').textContent;
+      if (navigator.share) {
+        navigator.share({ title, url: window.location.href });
+      } else {
+        navigator.clipboard.writeText(window.location.href)
+          .then(() => alert('¡Enlace copiado al portapapeles!'));
+      }
+    }
+
+    function openRegister() {
+      alert('Vista de Registro — próximamente');
+    }
+
+    // ── Keyboard ESC ──
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        ['filterModal','eventModal'].forEach(id => closeModal(id));
+      }
+    });
+  </script>
+</body>
+</html>

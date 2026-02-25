@@ -27,6 +27,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
+## TODO: 
 ### 5. Load Subscription Plans
 ```bash
 python manage.py shell

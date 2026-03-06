@@ -11,7 +11,8 @@ router = DefaultRouter()
 router.register(r'', UserViewSet, basename='user')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Place token endpoints before the router to avoid collision with user PK routes
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('', include(router.urls)),
 ]

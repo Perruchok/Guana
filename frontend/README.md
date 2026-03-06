@@ -99,3 +99,14 @@ Events grid, featured slider, and directory will populate from the real database
 | Create event form      | 🔲 TODO         | `/dashboard/eventos/nuevo`          |
 | Edit venue form        | 🔲 TODO         | `/dashboard/perfil`                 |
 | Subscription page      | 🔲 TODO         | `/dashboard/suscripcion`            |
+
+## Styles
+Do not deviate from these — no new colors, no new fonts
+
+Colors: cream #F5F0E8, ink #1A1612, terracota #C4622D, gold #D4A853, stone #8C7B6B, pale #EDE8DF, border #D6CEBC
+Fonts: font-display (Playfair Display) for headings, font-sans (DM Sans) for body, font-mono-gk (DM Mono) for labels/tags
+All API calls through lib/api.ts only — never fetch directly
+All types from types/index.ts — never redefine
+Spanish UI throughout
+Auth token via tokenStore.getAccess() from lib/auth.ts
+Server components fetch data; pass to 'use client' children for interactivity

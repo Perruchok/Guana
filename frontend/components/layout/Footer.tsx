@@ -7,7 +7,7 @@ export default function Footer() {
       <footer className="bg-ink text-cream grid grid-cols-1 md:grid-cols-3 gap-8 px-6 md:px-10 py-10 border-t border-border">
         <div>
           <Link href="/" className="font-display text-[1.35rem] font-black tracking-tight">
-            Guana<span className="text-gold">·</span>Know
+            Guana
           </Link>
           <p className="text-stone text-sm mt-3 leading-relaxed">
             La agenda cultural de Guanajuato.<br />
@@ -37,8 +37,8 @@ export default function Footer() {
           <p className="label text-stone mb-4">Contacto</p>
           <ul className="space-y-2">
             <li>
-              <a href="mailto:hola@guanaknow.mx" className="text-[#D6CEBC] text-sm hover:text-cream transition-colors">
-                hola@guanaknow.mx
+              <a href="mailto:hola@guana.mx" className="text-[#D6CEBC] text-sm hover:text-cream transition-colors">
+                hola@guana.mx
               </a>
             </li>
             <li>
@@ -61,7 +61,7 @@ export default function Footer() {
       </footer>
 
       <div className="bg-ink border-t border-[#2A2420] px-6 md:px-10 py-4 flex justify-between items-center">
-        <span className="text-stone text-xs">© 2025 Guana Know. Todos los derechos reservados.</span>
+        <span className="text-stone text-xs">© 2025 Guana. Todos los derechos reservados.</span>
       </div>
     </>
   )

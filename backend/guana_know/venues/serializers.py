@@ -39,7 +39,7 @@ class VenueSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'slug', 'created_at', 'updated_at']
     
     def validate_slug(self, value):
         venue_id = self.instance.id if self.instance else None
@@ -67,7 +67,9 @@ class VenueListSerializer(serializers.ModelSerializer):
             'slug',
             'category',
             'city',
+            'status',
             'image',
             'is_featured',
+            'owner',
             'owner_name',
         ]

@@ -43,7 +43,19 @@ class UserViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
     
     def perform_create(self, serializer):
-        serializer.save()
+        # when a new user registers, give them the free plan by default
+        user = serializer.save()
+        from guana_know.subscriptions.models import Plan, Subscription
+        try:
+            free_plan = Plan.objects.get(id='free')
+            Subscription.objects.create(
+                user=user,
+                plan=free_plan,
+                status='active'
+            )
+        except Plan.DoesNotExist:
+            # seeding may not have run yet, subscription will be created later
+            pass
     
     def perform_update(self, serializer):
         if self.request.user != self.get_object():
@@ -63,3 +75,4 @@ class UserViewSet(viewsets.ModelViewSet):
 class CustomTokenObtainPairView(TokenObtainPairView):
     """Custom JWT token obtain view with extended user data."""
     serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = [AllowAny]

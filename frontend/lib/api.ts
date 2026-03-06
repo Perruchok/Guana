@@ -13,6 +13,7 @@ import type {
 } from '@/types'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
+export const API_BASE_URL = BASE
 
 // ── Core fetch wrapper ────────────────────────
 
@@ -95,10 +96,11 @@ export const auth = {
 // ─────────────────────────────────────────────
 
 export const events = {
-  /** GET /events/ — public paginated list */
-  list: (filters: EventFilters = {}) =>
+  /** GET /events/ — public paginated list, or authenticated for owner filtering */
+  list: (filters: EventFilters = {}, token?: string | null) =>
     apiFetch<PaginatedResponse<EventListItem>>(
-      `/events/${toQueryString(filters as Record<string, unknown>)}`
+      `/events/${toQueryString(filters as Record<string, unknown>)}`,
+      { token }
     ),
 
   /** GET /events/featured — convenience: featured + upcoming */
@@ -141,15 +143,20 @@ export const events = {
 // ─────────────────────────────────────────────
 
 export const venues = {
-  /** GET /venues/ */
-  list: (filters: VenueFilters = {}) =>
+  /** GET /venues/ — public list or authenticated for owner filtering */
+  list: (filters: VenueFilters = {}, token?: string | null) =>
     apiFetch<PaginatedResponse<VenueListItem>>(
-      `/venues/${toQueryString(filters as Record<string, unknown>)}`
+      `/venues/${toQueryString(filters as Record<string, unknown>)}`,
+      { token }
     ),
 
   /** GET /venues/{id}/ */
   get: (id: string) =>
     apiFetch<Venue>(`/venues/${id}/`),
+
+  /** GET /venues/me/ — authenticated user's venues (array) */
+  me: (token: string) =>
+    apiFetch<Venue[]>('/venues/me/', { token }),
 
   /** POST /venues/ — auth required */
   create: (token: string, data: Partial<Venue>) =>
@@ -178,8 +185,11 @@ export const venues = {
 
 export const subscriptions = {
   /** GET /subscriptions/plans/ — public */
-  plans: () =>
-    apiFetch<Plan[]>('/subscriptions/plans/'),
+  plans: async () => {
+    const res = await apiFetch<any>('/subscriptions/plans/')
+    if (Array.isArray(res)) return res as Plan[]
+    return (res.results ?? res) as Plan[]
+  },
 
   /** GET /subscriptions/me/ — auth required */
   me: (token: string) =>

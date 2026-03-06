@@ -125,6 +125,7 @@ export interface Event {
   owner_name: string
   venue: string
   venue_name: string
+  venue_slug: string
   title: string
   slug: string
   description: string
@@ -154,6 +155,7 @@ export interface EventListItem {
   image: string | null
   start_datetime: string
   venue_name: string
+  venue_slug: string
   is_free: boolean
   price: number
   is_featured: boolean
@@ -183,6 +185,9 @@ export interface EventFilters {
   search?: string
   ordering?: string
   page?: number
+  venue?: string
+  status?: EventStatus
+  owner?: string
 }
 
 export interface VenueFilters {
@@ -192,4 +197,5 @@ export interface VenueFilters {
   search?: string
   ordering?: string
   page?: number
+  status?: VenueStatus
 }

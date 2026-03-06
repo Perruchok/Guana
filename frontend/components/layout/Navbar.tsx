@@ -18,7 +18,7 @@ export default function Navbar() {
         href="/"
         className="font-display text-[1.35rem] font-black tracking-tight text-ink"
       >
-        Guana<span className="text-terracota">·</span>Know
+        Guana
       </Link>
 
       <div className="flex items-center gap-2">

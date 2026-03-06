@@ -67,7 +67,7 @@ export default function RegistroPage() {
       })
       const tokens = await auth.login(form.username, form.password)
       tokenStore.setTokens(tokens.access, tokens.refresh)
-      router.push('/dashboard')
+      router.push('/dashboard/onboarding')
     } catch (err: unknown) {
       const e = err as Record<string, string | string[]>
       const msg = Object.values(e).flat()[0] ?? 'Error al crear la cuenta.'
@@ -81,7 +81,7 @@ export default function RegistroPage() {
     <div className="min-h-screen bg-cream px-4 py-12">
       <div className="max-w-lg mx-auto">
         <Link href="/" className="font-display font-black text-2xl text-ink block mb-10">
-          Guana<span className="text-terracota">·</span>Know
+          Guana<span className="text-terracota">·</span>
         </Link>
 
         {step === 'tipo' && (

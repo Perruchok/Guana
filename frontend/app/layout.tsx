@@ -25,13 +25,13 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Guana Know — Agenda Cultural de Guanajuato',
-    template: '%s | Guana Know',
+    default: 'Guana — Agenda Cultural de Guanajuato',
+    template: '%s | Guana',
   },
   description: 'Descubre eventos culturales, conciertos, exposiciones y más en Guanajuato, México.',
   keywords: ['Guanajuato', 'eventos', 'cultura', 'agenda', 'conciertos', 'exposiciones'],
   openGraph: {
-    title: 'Guana Know',
+    title: 'Guana',
     description: 'La agenda cultural de Guanajuato',
     locale: 'es_MX',
     type: 'website',

@@ -17,6 +17,10 @@ class EventSerializer(serializers.ModelSerializer):
         source='venue.name',
         read_only=True
     )
+    venue_slug = serializers.CharField(
+        source='venue.slug',
+        read_only=True
+    )
     is_upcoming = serializers.SerializerMethodField()
     is_ongoing = serializers.SerializerMethodField()
     is_past = serializers.SerializerMethodField()
@@ -29,6 +33,7 @@ class EventSerializer(serializers.ModelSerializer):
             'owner_name',
             'venue',
             'venue_name',
+            'venue_slug',
             'title',
             'slug',
             'description',
@@ -89,6 +94,10 @@ class EventListSerializer(serializers.ModelSerializer):
         source='venue.name',
         read_only=True
     )
+    venue_slug = serializers.CharField(
+        source='venue.slug',
+        read_only=True
+    )
     owner_name = serializers.CharField(
         source='owner.get_full_name',
         read_only=True
@@ -101,9 +110,11 @@ class EventListSerializer(serializers.ModelSerializer):
             'title',
             'slug',
             'category',
+            'status',
             'image',
             'start_datetime',
             'venue_name',
+            'venue_slug',
             'is_free',
             'price',
             'is_featured',

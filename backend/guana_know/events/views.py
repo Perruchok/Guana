@@ -24,7 +24,8 @@ class EventViewSet(viewsets.ModelViewSet):
     
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'venue__city', 'is_featured', 'is_free']
+    # allow filtering by owner for dashboard context
+    filterset_fields = ['category', 'venue__city', 'is_featured', 'is_free', 'owner', 'venue']
     search_fields = ['title', 'description', 'venue__name']
     ordering_fields = ['start_datetime', 'created_at', 'is_featured']
     ordering = ['-is_featured', 'start_datetime']

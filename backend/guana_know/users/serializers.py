@@ -46,6 +46,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            'id',
             'email',
             'username',
             'password',
@@ -54,6 +55,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'user_type',
         ]
+        read_only_fields = ['id']
     
     def validate(self, data):
         if data['password'] != data.pop('password_confirm'):

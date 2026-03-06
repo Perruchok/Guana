@@ -142,17 +142,8 @@
 
 ### Phase 1: Database & Testing (1-2 days)
 **Goal**: Get database running and test all endpoints
-
-**Tasks**:
-1. [ ] Install PostgreSQL locally OR use docker-compose
-2. [ ] Run `python manage.py makemigrations`
-3. [ ] Run `python manage.py migrate`
-4. [ ] Create superuser: `python manage.py createsuperuser`
-5. [ ] Load subscription plans (instructions in README.md)
-6. [ ] Start dev server: `python manage.py runserver`
-7. [ ] Visit http://localhost:8000/api/docs/
-8. [ ] Test each endpoint in Swagger UI
-9. [ ] Create test data (venues, events, etc.)
+6
+  nection
 10. [ ] Verify filtering, search, and ordering
 
 **Success Criteria**:

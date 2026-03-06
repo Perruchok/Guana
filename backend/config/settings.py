@@ -15,6 +15,26 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
+# In Codespaces, the host header comes from *.app.github.dev
+# We need to allow it dynamically
+import os
+
+CODESPACE_NAME = os.environ.get('CODESPACE_NAME')
+GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN = os.environ.get(
+    'GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN',
+    'app.github.dev'
+)
+
+if CODESPACE_NAME:
+    codespace_backend = f"https://{CODESPACE_NAME}-8000.{GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+    codespace_frontend = f"https://{CODESPACE_NAME}-3000.{GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+    ALLOWED_HOSTS += [
+        f"{CODESPACE_NAME}-8000.{GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}",
+    ]
+    CSRF_TRUSTED_ORIGINS = [codespace_backend, codespace_frontend]
+else:
+    CSRF_TRUSTED_ORIGINS = []
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,8 +57,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -107,6 +127,30 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Azure Blob Storage Configuration
+USE_AZURE_STORAGE = config('USE_AZURE_STORAGE', default=False, cast=bool)
+
+if USE_AZURE_STORAGE:
+    # Azure Blob Storage settings
+    AZURE_ACCOUNT_NAME = config('AZURE_ACCOUNT_NAME')
+    AZURE_ACCOUNT_KEY = config('AZURE_ACCOUNT_KEY')
+    AZURE_CONTAINER = config('AZURE_CONTAINER', default='media')
+    AZURE_CUSTOM_DOMAIN = config('AZURE_CUSTOM_DOMAIN', default=None)
+
+    # All media files go to Azure
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+
+    # Public URL for serving files
+    if AZURE_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/'
+    else:
+        MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
+
+else:
+    # Local development — files saved to /media/ folder
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
@@ -141,11 +185,14 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:8000',
-    cast=Csv()
-)
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+
+_default_cors = 'http://localhost:3000,http://127.0.0.1:3000'
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default=_default_cors, cast=Csv())
+
+if CODESPACE_NAME:
+    CORS_ALLOWED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [codespace_frontend]
 
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')

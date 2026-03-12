@@ -48,7 +48,7 @@ export default function VenueMap({
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-pale p-6">
-            <p className="text-stone text-center mb-4">Mapa no disponible</p>
+            <p className="text-stone text-center mb-4">{venueName}</p>
             <a
               href={mapsSearchUrl}
               target="_blank"
@@ -70,14 +70,6 @@ export default function VenueMap({
           <p className="text-ink text-sm mb-2">
             {address}, {city}
           </p>
-          <a
-            href={mapsSearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-terracota hover:underline font-medium"
-          >
-            Cómo llegar →
-          </a>
         </div>
       </div>
     </div>

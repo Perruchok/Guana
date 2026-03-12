@@ -39,6 +39,18 @@ def other_auth_client(other_user):
 
 @pytest.mark.django_db
 class TestVenueViews:
+    def test_cors_headers_present(self, api_client):
+        """CORS middleware should add appropriate headers when an Origin is provided."""
+        # enable DEBUG so that CORS_ALLOW_ALL_ORIGINS=True
+        from django.test import override_settings
+
+        with override_settings(DEBUG=True):
+            resp = api_client.get('/api/venues/', HTTP_ORIGIN='http://example.com')
+            assert resp.status_code == 200
+            # django-cors-headers may echo the origin or return '*'
+            header = resp.get('Access-Control-Allow-Origin')
+            assert header in ("*", "http://example.com")
+
     def test_get_unauthenticated_returns_only_published(self, api_client):
         VenueFactory(status='published')
         VenueFactory(status='draft')

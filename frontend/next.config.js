@@ -9,7 +9,13 @@ const nextConfig = {
         pathname: '/media/**',
       },
       {
-        // Azure Blob Storage — update with your real account name
+        // GitHub Codespaces backend
+        protocol: 'https',
+        hostname: '*.app.github.dev',
+        pathname: '/media/**',
+      },
+      {
+        // Azure Blob Storage
         protocol: 'https',
         hostname: '*.blob.core.windows.net',
         pathname: '/**',

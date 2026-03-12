@@ -134,6 +134,30 @@ class Command(BaseCommand):
                     'status': 'published',
                     'is_featured': True,
                 },
+                {
+                    'name': 'Café Paradiso',
+                    'slug': 'cafe-paradiso',
+                    'category': 'cafe',
+                    'address': 'Callejón del Beso 2, Centro',
+                    'city': 'Guanajuato',
+                    'description': 'Café bohemio con música en vivo y ambiente artístico.',
+                    'phone': '473 732 1234',
+                    'website': '',
+                    'status': 'published',
+                    'is_featured': False,
+                },
+                {
+                    'name': 'Biblioteca Pública',
+                    'slug': 'biblioteca-publica',
+                    'category': 'library',
+                    'address': 'Plaza de la Paz 1, Centro',
+                    'city': 'Guanajuato',
+                    'description': 'Biblioteca pública con colección de libros locales.',
+                    'phone': '473 732 5678',
+                    'website': '',
+                    'status': 'published',
+                    'is_featured': False,
+                },
             ]
 
             created_venues = []

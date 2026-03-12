@@ -48,6 +48,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
             className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
             onClick={() => setSelectedIndex(0)}
             priority
+            unoptimized={true}
           />
         </div>
       )
@@ -67,6 +68,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
                 fill
                 className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
                 onClick={() => setSelectedIndex(i)}
+                unoptimized={true}
               />
             </div>
           ))}
@@ -85,6 +87,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
               className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
               onClick={() => setSelectedIndex(0)}
               priority
+              unoptimized={true}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -96,6 +99,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
                   fill
                   className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
                   onClick={() => setSelectedIndex(i + 1)}
+                  unoptimized={true}
                 />
               </div>
             ))}
@@ -115,6 +119,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
             className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
             onClick={() => setSelectedIndex(0)}
             priority
+            unoptimized={true}
           />
         </div>
         {images.slice(1).map((img, i) => (
@@ -125,6 +130,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
               fill
               className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
               onClick={() => setSelectedIndex(i + 1)}
+              unoptimized={true}
             />
           </div>
         ))}
@@ -174,6 +180,7 @@ export default function VenueGallery({ images }: VenueGalleryProps) {
                 fill
                 className="object-contain"
                 priority
+                unoptimized={true}
               />
             </div>
 

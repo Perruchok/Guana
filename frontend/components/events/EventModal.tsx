@@ -116,7 +116,7 @@ export default function EventModal({ event, onClose }: Props) {
           </button>
 
           <Link
-            href={`/lugares/${event.venue}`}
+            href={`/lugares/${event.venue_slug}`}
             onClick={onClose}
             className="ml-auto flex items-center gap-2 bg-terracota text-cream text-xs font-medium px-4 py-2 rounded-sm hover:bg-[#a84e23] transition-colors"
           >

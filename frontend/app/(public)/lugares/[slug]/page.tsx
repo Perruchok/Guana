@@ -1,43 +1,55 @@
+export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
-import { venues, events, API_BASE_URL } from '@/lib/api'
+import { venues, events } from '@/lib/api'
 import { VENUE_CATEGORY_LABELS } from '@/lib/utils'
 import VenueGallerySection from '@/components/venues/VenueGallerySection'
 import VenueMap from '@/components/venues/VenueMap'
 import EventsSection from '@/components/venues/EventsSection'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import { notFound } from 'next/navigation'
 import type { Venue, Event } from '@/types'
 
 async function getVenueBySlug(slug: string): Promise<Venue | null> {
   try {
-    // First, search for the venue by slug
-    const searchRes = await fetch(`${API_BASE_URL}/venues/?search=${encodeURIComponent(slug)}`)
-    if (!searchRes.ok) return null
-    
-    const searchData = await searchRes.json()
-    if (!searchData.results || searchData.results.length === 0) return null
-    
-    const venueListItem = searchData.results[0]
-    
-    // Then get the full venue data
-    const venueRes = await fetch(`${API_BASE_URL}/venues/${venueListItem.id}/`)
-    if (!venueRes.ok) return null
-    
-    return await venueRes.json()
+    const venueListItem = await venues.bySlug(slug, { cache: 'no-store' })
+    if (!venueListItem) return null
+    // Fetch full venue detail to get address, description, phone, etc.
+    return await venues.get(venueListItem.id)
   } catch (error) {
-    console.error('Error fetching venue:', error)
+    console.error('Venue fetch error:', error)
     return null
   }
 }
 
 async function getVenueEvents(venueId: string): Promise<Event[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/events/?venue=${venueId}&status=published&ordering=start_datetime`)
-    if (!res.ok) return []
-    
-    const data = await res.json()
-    return data.results ?? []
+    const res = await events.list({
+      venue: venueId,
+      status: 'published',
+      ordering: 'start_datetime',
+    }, null, { cache: 'no-store' })
+    // Map EventListItem[] a Event[] con valores vacíos
+    return (res.results ?? []).map((item) => ({
+      ...item,
+      owner: '',
+      owner_name: item.owner_name || '',
+      venue: venueId,
+      venue_name: item.venue_name || '',
+      venue_slug: item.venue_slug || '',
+      description: '',
+      end_datetime: '',
+      capacity: null,
+      registered_count: 0,
+      registration_url: null,
+      status: 'published',
+      is_upcoming: false,
+      is_ongoing: false,
+      is_past: false,
+      created_at: '',
+      updated_at: '',
+    }))
   } catch (error) {
     console.error('Error fetching venue events:', error)
     return []
@@ -54,48 +66,28 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function VenuePage({
-  params,
-}: {
-  params: { slug: string }
-}) {
-  const venue = await getVenueBySlug(params.slug)
+export default async function VenuePage({ params }: { params: { slug: string } }) {
+  let venue = null
+  try {
+    venue = await getVenueBySlug(params.slug)
+  } catch (e) {
+    console.error('Venue fetch error:', e)
+  }
+  if (!venue) notFound()
 
-  if (!venue) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen flex items-center justify-center px-6 bg-cream">
-          <div className="text-center">
-            <h1 className="font-display font-black text-4xl text-ink mb-2">
-              Lugar no encontrado
-            </h1>
-            <p className="text-stone text-lg mb-6">
-              No pudimos encontrar el lugar que buscas.
-            </p>
-            <Link
-              href="/directorio"
-              className="inline-flex items-center gap-2 text-terracota hover:underline font-medium"
-            >
-              ← Ver directorio
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </>
-    )
+  let venueEvents: Event[] = []
+  try {
+    venueEvents = await getVenueEvents(venue.id)
+  } catch (e) {
+    console.error('Error fetching venue events:', e)
   }
 
-  const venueEvents = await getVenueEvents(venue.id)
   const categoryLabel = VENUE_CATEGORY_LABELS[venue.category] || venue.category
-
-  // Prepare gallery images (currently only one image field)
   const galleryImages = venue.image ? [venue.image] : []
 
   return (
     <>
       <Navbar />
-
       <main className="bg-cream min-h-screen">
         {/* SECTION 1: HERO HEADER */}
         {venue.image ? (
@@ -106,6 +98,7 @@ export default async function VenuePage({
               fill
               className="object-cover"
               priority
+              unoptimized={true}
             />
             {/* Dark gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />

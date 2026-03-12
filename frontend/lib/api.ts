@@ -97,10 +97,10 @@ export const auth = {
 
 export const events = {
   /** GET /events/ — public paginated list, or authenticated for owner filtering */
-  list: (filters: EventFilters = {}, token?: string | null) =>
+  list: (filters: EventFilters = {}, token?: string | null, fetchOptions: RequestInit = {}) =>
     apiFetch<PaginatedResponse<EventListItem>>(
       `/events/${toQueryString(filters as Record<string, unknown>)}`,
-      { token }
+      { token, ...fetchOptions }
     ),
 
   /** GET /events/featured — convenience: featured + upcoming */
@@ -143,6 +143,15 @@ export const events = {
 // ─────────────────────────────────────────────
 
 export const venues = {
+    /** GET /venues/?slug={slug}&status=published — busca venue por slug */
+    bySlug: async (slug: string, fetchOptions: RequestInit = {}) => {
+      const res = await apiFetch<PaginatedResponse<VenueListItem>>(
+        `/venues/?slug=${encodeURIComponent(slug)}&status=published`,
+        { ...fetchOptions }
+      );
+      if (!res.results || res.results.length === 0) return null;
+      return res.results[0];
+    },
   /** GET /venues/ — public list or authenticated for owner filtering */
   list: (filters: VenueFilters = {}, token?: string | null) =>
     apiFetch<PaginatedResponse<VenueListItem>>(
@@ -202,4 +211,57 @@ export const subscriptions = {
       token,
       body: JSON.stringify({ plan_id: planId }),
     }),
+}
+
+// ─────────────────────────────────────────────
+// UPLOADS
+// ─────────────────────────────────────────────
+
+export const uploads = {
+  /**
+   * POST /venues/{id}/upload-image/
+   * Uploads a single image file for a venue.
+   */
+  venueImage: async (token: string, venueId: string, file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const res = await fetch(
+      `${BASE}/venues/${venueId}/upload-image/`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        // Do NOT set Content-Type here — browser sets it with boundary
+        body: formData,
+      }
+    )
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: 'Error al subir imagen' }))
+      throw error
+    }
+    return res.json() as Promise<Venue>
+  },
+
+  /**
+   * POST /events/{id}/upload-image/
+   * Uploads a single image file for an event.
+   */
+  eventImage: async (token: string, eventId: string, file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const res = await fetch(
+      `${BASE}/events/${eventId}/upload-image/`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    )
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: 'Error al subir imagen' }))
+      throw error
+    }
+    return res.json() as Promise<Event>
+  },
 }

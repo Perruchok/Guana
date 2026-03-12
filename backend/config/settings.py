@@ -185,14 +185,23 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
-CORS_ALLOW_ALL_ORIGINS = False
+# CORS configuration
+# - during development we relax policy to avoid headaches with dynamic
+#   Codespace domains and local frontend. In production we restrict
+#   origins to a whitelist (configurable via environment variables).
 CORS_ALLOW_CREDENTIALS = True
 
-_default_cors = 'http://localhost:3000,http://127.0.0.1:3000'
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default=_default_cors, cast=Csv())
+if DEBUG:
+    # allow everything while debugging/running locally
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = []  # unused when allow all
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
-if CODESPACE_NAME:
-    CORS_ALLOWED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [codespace_frontend]
+    _default_cors = 'http://localhost:3000,http://127.0.0.1:3000'
+    CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default=_default_cors, cast=Csv())
+    if CODESPACE_NAME:
+        CORS_ALLOWED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [codespace_frontend]
 
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')

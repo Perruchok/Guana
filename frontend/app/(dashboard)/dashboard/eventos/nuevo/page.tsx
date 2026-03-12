@@ -4,10 +4,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { events, venues } from '@/lib/api'
+import { events, venues, uploads } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
 import { EVENT_CATEGORY_LABELS, VENUE_CATEGORY_LABELS } from '@/lib/utils'
-import type { EventCategory, Venue } from '@/types'
+import ImageUploader from '@/components/ui/ImageUploader'
+import type { EventCategory, Venue, Event } from '@/types'
 
 export default function NuevoEventoPage() {
   const router = useRouter()
@@ -32,6 +33,7 @@ export default function NuevoEventoPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [venuesLoading, setVenuesLoading] = useState(true)
+  const [pendingImage, setPendingImage] = useState<File | null>(null)
 
   // Fetch user's venues
   useEffect(() => {
@@ -75,12 +77,17 @@ export default function NuevoEventoPage() {
     try {
       if (!token) throw new Error('No token found')
 
-      await events.create(token, {
+      const newEvent = await events.create(token, {
         ...form,
         slug: slug || generateSlug(form.title),
         price: form.is_free ? 0 : form.price,
         capacity: form.capacity ? parseInt(form.capacity) : null,
-      })
+      }) as Event
+
+      // Upload image if one was selected
+      if (pendingImage && newEvent.id) {
+        await uploads.eventImage(token, newEvent.id, pendingImage)
+      }
 
       router.push('/dashboard/eventos')
     } catch (err: unknown) {
@@ -141,6 +148,14 @@ export default function NuevoEventoPage() {
             </p>
           </div>
         )}
+
+        {/* Image Upload (optional) */}
+        <ImageUploader
+          currentImage={pendingImage ? URL.createObjectURL(pendingImage) : null}
+          onUpload={async (file) => setPendingImage(file)}
+          label="Imagen del evento (opcional)"
+          hint="JPG, PNG o WebP · Máx 5MB"
+        />
 
         {/* Venue selection */}
         {venuesLoading ? (

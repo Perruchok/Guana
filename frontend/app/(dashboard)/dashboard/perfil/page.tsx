@@ -4,9 +4,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { venues } from '@/lib/api'
+import { venues, uploads } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
 import { VENUE_CATEGORY_LABELS } from '@/lib/utils'
+import ImageUploader from '@/components/ui/ImageUploader'
 import type { Venue, VenueCategory } from '@/types'
 
 export default function PerfilPage() {
@@ -31,6 +32,7 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [publishLoading, setPublishLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   // Fetch user's venue
   useEffect(() => {
@@ -109,6 +111,19 @@ export default function PerfilPage() {
     }
   }
 
+  const handleImageUpload = async (file: File) => {
+    if (!venue || !token) return
+    setUploading(true)
+    try {
+      const updated = await uploads.venueImage(token, venue.id, file)
+      setVenue(updated)
+    } catch (err: any) {
+      setError(err.detail || 'Error al subir la imagen. Intenta de nuevo.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const categories = Object.entries(VENUE_CATEGORY_LABELS).map(
     ([key, label]) => ({ id: key as VenueCategory, label })
   )
@@ -144,6 +159,15 @@ export default function PerfilPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-border rounded-sm p-6 md:p-8 mb-6">
+        {/* Image Upload */}
+        <ImageUploader
+          currentImage={venue.image}
+          onUpload={handleImageUpload}
+          loading={uploading}
+          label="Foto principal de tu lugar"
+          hint="JPG, PNG o WebP · Máx 5MB · Esta imagen aparece en el directorio y en tu perfil"
+        />
+
         {/* Name */}
         <div>
           <label className="block text-sm font-medium text-ink mb-2">

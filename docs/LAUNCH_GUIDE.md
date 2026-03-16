@@ -10,7 +10,6 @@ Stack: Django REST Framework → Azure Web Apps · Next.js → Vercel · Postgre
 
 1. In Azure, create a **Web App** (Linux, Python 3.11). Download the publish profile.
 2. Add the publish profile as a GitHub secret: `AZURE_WEBAPP_PUBLISH_PROFILE`.
-3. Create `.github/workflows/backend-deploy.yml`:
 
 ```yaml
 name: Backend Deploy

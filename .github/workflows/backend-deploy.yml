@@ -1,0 +1,58 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          SECRET_KEY: ci-secret-not-used-in-prod
+          DEBUG: "False"
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT: "5432"
+        run: pytest --tb=short -q
+
+      - name: Collect static files
+        working-directory: backend
+        run: python manage.py collectstatic --noinput
+        env:
+          SECRET_KEY: ci-secret-not-used-in-prod
+          DEBUG: "False"
+
+      - name: Run migrations
+        working-directory: backend
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT: "5432"
+        run: python manage.py migrate --noinput
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: guana-know-backend
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: backend

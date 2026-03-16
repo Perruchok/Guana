@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth import get_user_model
 
+from guana_know.common.throttles import LoginRateThrottle, RegisterRateThrottle
 from .serializers import (
     UserSerializer,
     UserCreateSerializer,
@@ -41,6 +42,11 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'list', 'retrieve']:
             return [AllowAny()]
         return [IsAuthenticated()]
+
+    def get_throttles(self):
+        if self.action == 'create':
+            return [RegisterRateThrottle()]
+        return super().get_throttles()
     
     def perform_create(self, serializer):
         # when a new user registers, give them the free plan by default
@@ -76,3 +82,4 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     """Custom JWT token obtain view with extended user data."""
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]

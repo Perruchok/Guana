@@ -39,15 +39,24 @@ class EventViewSet(viewsets.ModelViewSet):
         return EventSerializer
     
     def get_queryset(self):
+        from django.utils import timezone
+        now = timezone.now()
         user = self.request.user
-        queryset = Event.objects.filter(status='published')
-        
+
         if user.is_authenticated:
-            queryset = Event.objects.filter(
-                models.Q(status='published') | models.Q(owner=user)
+            # Owners can see their own events regardless of date
+            # (so they can review past drafts in the dashboard)
+            # But published events are still filtered to upcoming only
+            return Event.objects.filter(
+                models.Q(status='published', start_datetime__gte=now)
+                | models.Q(owner=user)
             )
-        
-        return queryset
+
+        # Public: only upcoming published events
+        return Event.objects.filter(
+            status='published',
+            start_datetime__gte=now,
+        )
     
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

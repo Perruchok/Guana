@@ -38,7 +38,7 @@ class Venue(BaseModel):
     )
     
     name = models.CharField(max_length=255, db_index=True)
-    slug = models.SlugField(unique=True, db_index=True)
+    slug = models.SlugField(max_length=255, unique=True, db_index=True)
     description = models.TextField()
     category = models.CharField(
         max_length=50,

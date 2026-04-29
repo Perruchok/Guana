@@ -31,9 +31,21 @@ if CODESPACE_NAME:
     ALLOWED_HOSTS += [
         f"{CODESPACE_NAME}-8000.{GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}",
     ]
-    CSRF_TRUSTED_ORIGINS = [codespace_backend, codespace_frontend]
+    CSRF_TRUSTED_ORIGINS = [
+        codespace_backend,
+        codespace_frontend,
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
 else:
-    CSRF_TRUSTED_ORIGINS = []
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -54,6 +66,7 @@ INSTALLED_APPS = [
     'guana_know.venues',
     'guana_know.events',
     'guana_know.subscriptions',
+    'guana_know.agents',
 ]
 
 MIDDLEWARE = [

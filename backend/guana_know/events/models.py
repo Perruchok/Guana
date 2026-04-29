@@ -84,7 +84,27 @@ class Event(BaseModel):
     )
     
     is_featured = models.BooleanField(default=False, db_index=True)
-    
+
+    SOURCE_CHOICES = [
+        ('manual', 'Manual'),
+        ('agent', 'Agent'),
+    ]
+
+    source = models.CharField(
+        max_length=10,
+        choices=SOURCE_CHOICES,
+        default='manual',
+        db_index=True,
+    )
+    source_url = models.URLField(
+        blank=True,
+        help_text='Original URL where the agent discovered this event.',
+    )
+    image_source_url = models.URLField(
+        blank=True,
+        help_text='Original image URL from the scraped event source.',
+    )
+
     class Meta:
         ordering = ['start_datetime']
         indexes = [

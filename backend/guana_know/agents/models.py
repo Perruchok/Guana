@@ -19,12 +19,26 @@ class EventSource(BaseModel):
         ('twitter', 'Twitter/X'),
     ]
 
+    STRATEGY_CHOICES = [
+        ('generic', 'Generic HTML scraper'),
+        ('json_ld', 'JSON-LD structured data'),
+        ('ical', 'iCal feed'),
+        ('apify_facebook', 'Apify — Facebook'),
+        ('apify_instagram', 'Apify — Instagram'),
+    ]
+
     url = models.URLField(unique=True)
     source_type = models.CharField(
         max_length=20,
         choices=SOURCE_TYPE_CHOICES,
         default='website',
         db_index=True,
+    )
+    scrape_strategy = models.CharField(
+        max_length=30,
+        choices=STRATEGY_CHOICES,
+        default='generic',
+        help_text='Scraping strategy to use for this source.',
     )
     last_scraped_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True, db_index=True)

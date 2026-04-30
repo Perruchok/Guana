@@ -33,6 +33,11 @@ TOOL_DEFINITION = {
                     'type': 'string',
                     'description': 'Type of source: instagram, facebook, website, or twitter.',
                 },
+                'strategy': {
+                    'type': 'string',
+                    'description': 'Scraping strategy: generic, json_ld, ical, apify_facebook.',
+                    'enum': ['generic', 'json_ld', 'ical', 'apify_facebook', 'apify_instagram'],
+                },
             },
             'required': ['url'],
         },
@@ -149,17 +154,8 @@ def _extract_image_url(soup, base_url: str) -> str | None:
     return None
 
 
-def run(url: str, **kwargs) -> dict:
-    """
-    Fetches a URL and returns its visible text content.
-
-    Args:
-        url: The URL to fetch.
-
-    Returns:
-        A dict with keys: content (str), fetched_at (ISO str), status_code (int).
-        On error, returns content='' and an 'error' key.
-    """
+def _scrape_generic(url: str) -> dict:
+    """Fetches a URL using standard HTTP and returns its visible text content."""
     try:
         _validate_url(url)
     except ValueError as exc:
@@ -209,6 +205,151 @@ def run(url: str, **kwargs) -> dict:
         'image_url': image_url,
         'event_links': event_links,
     }
+
+
+_APIFY_POLL_INTERVAL = 10  # seconds between status checks
+_APIFY_MAX_POLLS = 18      # 3 minutes max
+
+
+def _scrape_apify_facebook(url: str) -> dict:
+    """
+    Fetches Facebook events using the Apify API.
+
+    Requires APIFY_API_TOKEN in the environment.
+    Actor can be overridden via APIFY_FACEBOOK_ACTOR_ID (default: apify~facebook-events-scraper).
+    """
+    import os
+    import time
+
+    apify_token = os.environ.get('APIFY_API_TOKEN')
+    if not apify_token:
+        logger.error('scrape_tool: APIFY_API_TOKEN not set')
+        return {
+            'content': '', 'event_links': [], 'status_code': 0,
+            'error': 'APIFY_API_TOKEN environment variable is not set.',
+            'strategy': 'apify_facebook',
+        }
+
+    actor_id = os.environ.get('APIFY_FACEBOOK_ACTOR_ID', 'apify~facebook-events-scraper')
+
+    logger.info('scrape_tool [apify_facebook]: starting actor %s for %s', actor_id, url)
+
+    try:
+        with httpx.Client(timeout=30) as client:
+            run_resp = client.post(
+                f'https://api.apify.com/v2/acts/{actor_id}/runs',
+                params={'token': apify_token},
+                json={'startUrls': [url]},
+            )
+    except httpx.RequestError as exc:
+        logger.warning('scrape_tool [apify_facebook]: request error starting run — %s', exc)
+        return {
+            'content': '', 'event_links': [], 'status_code': 0,
+            'error': str(exc), 'strategy': 'apify_facebook',
+        }
+
+    if run_resp.status_code not in (200, 201):
+        logger.warning(
+            'scrape_tool [apify_facebook]: actor start returned %d — %s',
+            run_resp.status_code, run_resp.text[:200],
+        )
+        return {
+            'content': '', 'event_links': [],
+            'status_code': run_resp.status_code,
+            'error': f'Apify actor start failed: {run_resp.text[:200]}',
+            'strategy': 'apify_facebook',
+        }
+
+    run_data = run_resp.json().get('data', {})
+    run_id = run_data.get('id')
+    dataset_id = run_data.get('defaultDatasetId')
+
+    if not run_id:
+        return {
+            'content': '', 'event_links': [], 'status_code': 0,
+            'error': 'Apify did not return a run ID.',
+            'strategy': 'apify_facebook',
+        }
+
+    # Poll for completion
+    final_status = ''
+    for _ in range(_APIFY_MAX_POLLS):
+        time.sleep(_APIFY_POLL_INTERVAL)
+        try:
+            with httpx.Client(timeout=15) as client:
+                status_resp = client.get(
+                    f'https://api.apify.com/v2/actor-runs/{run_id}',
+                    params={'token': apify_token},
+                )
+            final_status = status_resp.json().get('data', {}).get('status', '')
+        except httpx.RequestError:
+            continue
+
+        if final_status == 'SUCCEEDED':
+            break
+        if final_status in ('FAILED', 'ABORTED', 'TIMED-OUT'):
+            return {
+                'content': '', 'event_links': [], 'status_code': 0,
+                'error': f'Apify run ended with status: {final_status}',
+                'strategy': 'apify_facebook',
+            }
+    else:
+        return {
+            'content': '', 'event_links': [], 'status_code': 0,
+            'error': 'Apify run did not complete within the timeout.',
+            'strategy': 'apify_facebook',
+        }
+
+    # Fetch dataset items
+    try:
+        with httpx.Client(timeout=30) as client:
+            items_resp = client.get(
+                f'https://api.apify.com/v2/datasets/{dataset_id}/items',
+                params={'token': apify_token, 'format': 'json'},
+            )
+        structured_events = items_resp.json() if items_resp.status_code == 200 else []
+    except httpx.RequestError as exc:
+        logger.warning('scrape_tool [apify_facebook]: failed to fetch dataset — %s', exc)
+        return {
+            'content': '', 'event_links': [], 'status_code': 0,
+            'error': f'Failed to fetch Apify dataset: {exc}',
+            'strategy': 'apify_facebook',
+        }
+
+    logger.info(
+        'scrape_tool [apify_facebook]: fetched %d events from %s',
+        len(structured_events) if isinstance(structured_events, list) else 0,
+        url,
+    )
+
+    # Filter out error items (the actor emits one per URL that failed)
+    if isinstance(structured_events, list):
+        structured_events = [i for i in structured_events if not i.get('error')]
+
+    return {
+        'content': '',
+        'structured_events': structured_events if isinstance(structured_events, list) else [],
+        'event_links': [],
+        'status_code': 200,
+        'strategy': 'apify_facebook',
+    }
+
+
+def run(url: str, strategy: str = 'generic', **kwargs) -> dict:
+    """
+    Fetches a URL and returns its content.
+
+    Args:
+        url: The URL to fetch.
+        strategy: Scraping strategy — 'generic' (default), 'apify_facebook'.
+
+    Returns:
+        A dict with content, status_code, and strategy-specific fields.
+    """
+    if strategy == 'apify_facebook':
+        return _scrape_apify_facebook(url)
+
+    return _scrape_generic(url)
 
 
 def _now_iso() -> str:

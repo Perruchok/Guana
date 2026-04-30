@@ -100,7 +100,7 @@ class Event(BaseModel):
         blank=True,
         help_text='Original URL where the agent discovered this event.',
     )
-    image_source_url = models.URLField(
+    image_source_url = models.TextField(
         blank=True,
         help_text='Original image URL from the scraped event source.',
     )

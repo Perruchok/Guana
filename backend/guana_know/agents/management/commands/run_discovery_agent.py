@@ -58,7 +58,7 @@ class Command(BaseCommand):
         for source in sources:
             self.stdout.write(f'Processing: {source.url}')
             try:
-                result = run_for_source(source.url, source.source_type, dry_run=dry_run)
+                result = run_for_source(source.url, source.source_type, strategy=source.scrape_strategy, dry_run=dry_run)
             except EnvironmentError as exc:
                 raise CommandError(str(exc))
 

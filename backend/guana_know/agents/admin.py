@@ -11,17 +11,17 @@ from .models import EventDraft, EventSource
 
 @admin.action(description='Run discovery agent for selected sources')
 def run_discovery(modeladmin, request, queryset):
-    from guana_know.agents.orchestrator import run_for_source
+    from agents.orchestrator import run_for_source
     for source in queryset.filter(is_active=True):
-        run_for_source(source.url, source.source_type, dry_run=False)
+        run_for_source(source.url, source.source_type, strategy=source.scrape_strategy, dry_run=False)
     modeladmin.message_user(request, f'Discovery triggered for {queryset.count()} source(s).')
 
 
 @admin.register(EventSource)
 class EventSourceAdmin(admin.ModelAdmin):
     actions = [run_discovery]
-    list_display = ['url', 'source_type', 'is_active', 'last_scraped_at', 'error_count']
-    list_filter = ('source_type', 'is_active')
+    list_display = ['url', 'source_type', 'scrape_strategy', 'is_active', 'last_scraped_at', 'error_count']
+    list_filter = ('source_type', 'scrape_strategy', 'is_active')
     search_fields = ('url',)
     raw_id_fields = ()
     readonly_fields = ('last_scraped_at', 'error_count', 'last_error', 'created_at', 'updated_at')

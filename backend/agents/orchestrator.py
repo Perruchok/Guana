@@ -108,7 +108,7 @@ def _dispatch_tool(tool_name: str, tool_input: dict) -> str:
     return json.dumps(result)
 
 
-def run_for_source(source_url: str, source_type: str, dry_run: bool = False) -> dict:
+def run_for_source(source_url: str, source_type: str, strategy: str = 'generic', dry_run: bool = False) -> dict:
     from guana_know.agents.models import AgentRun
 
     if not os.environ.get('AZURE_OPENAI_API_KEY'):
@@ -117,6 +117,10 @@ def run_for_source(source_url: str, source_type: str, dry_run: bool = False) -> 
     run_record = None
     if not dry_run:
         run_record = AgentRun.objects.create(status='running')
+
+    # Structured sources bypass the LLM pipeline entirely.
+    if strategy in ('apify_facebook', 'apify_instagram'):
+        return _run_structured_source(source_url, strategy, dry_run, run_record)
 
     try:
         client = AzureOpenAI(
@@ -229,6 +233,188 @@ def run_for_source(source_url: str, source_type: str, dry_run: bool = False) -> 
         raise
 
 
+_CATEGORY_KEYWORDS: list[tuple[str, list[str]]] = [
+    ('music',       ['música', 'musica', 'concierto', 'jazz', 'orquesta', 'banda', 'recital',
+                     'sinfonía', 'sinfonia', 'ópera', 'opera', 'coro', 'cantata', 'tocada']),
+    ('dance',       ['danza', 'baile', 'ballet', 'coreografía', 'coreografia', 'clown',
+                     'folklórico', 'folklorico', 'zapateado']),
+    ('theater',     ['teatro', 'obra', 'dramaturg', 'escénico', 'escenico', 'performance teatral',
+                     'monólogo', 'monologo', 'comedia', 'dramaturgia']),
+    ('workshop',    ['taller', 'workshop', 'curso', 'clase', 'capacitación', 'capacitacion',
+                     'formación', 'formacion', 'seminario']),
+    ('exhibition',  ['exposición', 'exposicion', 'muestra', 'galería', 'galeria',
+                     'instalación', 'instalacion', 'fotografía', 'fotografia']),
+    ('festival',    ['festival', 'feria', 'celebración', 'celebracion', 'festiv']),
+    ('cinema',      ['cine', 'película', 'pelicula', 'proyección', 'proyeccion',
+                     'documental', 'cortometraje', 'largometraje']),
+    ('conference',  ['conferencia', 'charla', 'ponencia', 'foro', 'coloquio',
+                     'simposio', 'conversatorio', 'debate', 'mesa redonda']),
+    ('literature',  ['poesía', 'poesia', 'poema', 'lectura', 'presentación de libro',
+                     'presentacion de libro', 'narrativa', 'literatura', 'recital poético']),
+    ('art',         ['arte', 'pintura', 'escultura', 'mural', 'artista visual', 'cerámica',
+                     'ceramica', 'grabado', 'serigrafía']),
+]
+
+
+def _infer_category(title: str, description: str) -> str:
+    """
+    Returns the best matching Event category key based on keyword matching
+    against the title and description. Falls back to 'other'.
+    """
+    haystack = f'{title} {description}'.lower()
+    for category, keywords in _CATEGORY_KEYWORDS:
+        if any(kw in haystack for kw in keywords):
+            return category
+    return 'other'
+
+
+def _map_apify_facebook_event(item: dict) -> dict:
+    """Maps a raw Apify Facebook event item to our internal event_data format."""
+    name = item.get('name') or ''
+    description = item.get('description') or ''
+
+    # utcStartDate is always ISO 8601 UTC from the actor
+    start_time = item.get('utcStartDate') or None
+    end_time = None  # actor does not return an end datetime
+
+    location = item.get('location') or {}
+    if isinstance(location, dict):
+        venue_name = location.get('name') or None
+    elif isinstance(location, str):
+        venue_name = location
+    else:
+        venue_name = None
+
+    image_url = item.get('imageUrl') or None
+
+    event_url = item.get('url') or None
+    is_free = not item.get('paidContent', False)
+
+    return {
+        'title': name,
+        'description': description,
+        'start_datetime': start_time,
+        'end_datetime': end_time,
+        'venue_name': venue_name,
+        'category': _infer_category(name, description),
+        'price': 0,
+        'is_free': is_free,
+        'registration_url': event_url,
+        'image_url': image_url,
+    }
+
+
+def _run_structured_source(
+    source_url: str, strategy: str, dry_run: bool, run_record
+) -> dict:
+    """
+    Direct pipeline for structured sources (e.g. Apify Facebook).
+
+    Calls scrape_tool, maps structured_events, deduplicates, and persists —
+    without invoking the LLM.
+    """
+    from datetime import datetime, timezone as dt_timezone
+
+    logger.info('_run_structured_source: %s strategy=%s', source_url, strategy)
+
+    try:
+        scrape_result = scrape_tool.run(url=source_url, strategy=strategy)
+
+        if scrape_result.get('error'):
+            summary = {
+                'candidates': [],
+                'scrape_status': scrape_result.get('status_code', 0),
+                'total_found': 0,
+                'total_duplicates': 0,
+                'error': scrape_result['error'],
+            }
+            if run_record:
+                run_record.status = 'failed'
+                run_record.finished_at = datetime.now(dt_timezone.utc)
+                run_record.errors = [scrape_result['error']]
+                run_record.save()
+            return summary
+
+        raw_events = scrape_result.get('structured_events', [])
+        candidates = []
+        total_duplicates = 0
+
+        for item in raw_events:
+            if strategy == 'apify_facebook':
+                event_data = _map_apify_facebook_event(item)
+            else:
+                event_data = item  # fallback: pass through as-is
+
+            title = event_data.get('title', '')
+            if not title:
+                continue
+
+            dedup_result = dedup_tool.run(
+                title=title,
+                venue_name=event_data.get('venue_name'),
+                start_datetime=event_data.get('start_datetime'),
+            )
+
+            is_dup = dedup_result.get('is_duplicate', False)
+            if is_dup:
+                total_duplicates += 1
+
+            image_url = _sanitize_image_url(event_data.get('image_url'))
+            event_data['image_url'] = image_url
+
+            candidates.append({
+                'event_data': event_data,
+                'confidence': 0.85,  # structured data is reliable
+                'issues': [],
+                'is_duplicate': is_dup,
+            })
+
+        summary = {
+            'candidates': candidates,
+            'scrape_status': scrape_result.get('status_code', 200),
+            'total_found': len(candidates),
+            'total_duplicates': total_duplicates,
+            'strategy': strategy,
+        }
+
+        if not dry_run:
+            summary = _persist_candidates(summary, source_url)
+        else:
+            from django.utils import timezone as tz
+            from django.utils.dateparse import parse_datetime
+            for candidate in candidates:
+                start_raw = candidate['event_data'].get('start_datetime')
+                if start_raw:
+                    dt = parse_datetime(str(start_raw))
+                    if dt:
+                        if tz.is_naive(dt):
+                            dt = tz.make_aware(dt)
+                        candidate['is_past'] = dt < tz.now()
+                    else:
+                        candidate['is_past'] = False
+                else:
+                    candidate['is_past'] = False
+
+        if run_record:
+            run_record.status = 'completed'
+            run_record.finished_at = datetime.now(dt_timezone.utc)
+            run_record.sources_processed = 1
+            run_record.events_created = summary.get('written_events', 0)
+            run_record.events_deduped = summary.get('total_duplicates', 0)
+            run_record.save()
+
+        return summary
+
+    except Exception as exc:
+        logger.exception('_run_structured_source failed for %s', source_url)
+        if run_record:
+            run_record.status = 'failed'
+            run_record.finished_at = datetime.now(dt_timezone.utc)
+            run_record.errors = [str(exc)]
+            run_record.save()
+        raise
+
+
 def _persist_candidates(summary: dict, source_url: str) -> dict:
     """
     Writes eligible candidates to the database.
@@ -287,14 +473,20 @@ def _persist_candidates(summary: dict, source_url: str) -> dict:
 def _sanitize_image_url(image_url: str | None) -> str | None:
     """
     Returns image_url only if it looks like an actual image file.
-    Rejects page URLs that the LLM may have incorrectly used as image_url
-    (e.g. the event source URL instead of a real image path).
+    Rejects page URLs that the LLM may have incorrectly used as image_url.
+    Accepts Facebook/CDN URLs that have image extensions before query strings.
     """
     if not image_url:
         return None
     _IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.svg')
-    lower = image_url.lower().split('?')[0]  # strip query string before checking extension
-    if any(lower.endswith(ext) for ext in _IMAGE_EXTENSIONS):
+    # Strip query string before checking extension (handles CDN URLs like fbcdn.net)
+    path = image_url.lower().split('?')[0]
+    if any(path.endswith(ext) for ext in _IMAGE_EXTENSIONS):
+        return image_url
+    # Also accept known image CDN hostnames that don't use file extensions
+    from urllib.parse import urlparse
+    host = urlparse(image_url).netloc
+    if any(cdn in host for cdn in ('fbcdn.net', 'cdninstagram.com', 'cloudfront.net', 'twimg.com')):
         return image_url
     return None
 
@@ -498,7 +690,7 @@ def _create_agent_event(event_data: dict, source_url: str,
 
     from guana_know.events.models import Event
 
-    base_slug = slugify(title)[:200]
+    base_slug = slugify(title)[:45]  # SlugField max_length=50; leave room for -N suffix
     slug = _unique_slug(base_slug)
 
     resolved_image_url = image_url or event_data.get('image_url') or ''

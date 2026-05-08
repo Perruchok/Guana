@@ -64,23 +64,6 @@ export default function DirectorioContent({ initialVenues, initialCategory }: Pr
       .join('')
   }
 
-  // Color palette for avatars
-  const avatarColors = [
-    'bg-amber-100 text-amber-800',
-    'bg-blue-100 text-blue-800',
-    'bg-green-100 text-green-800',
-    'bg-purple-100 text-purple-800',
-    'bg-pink-100 text-pink-800',
-    'bg-red-100 text-red-800',
-    'bg-cyan-100 text-cyan-800',
-    'bg-indigo-100 text-indigo-800',
-  ]
-
-  const getAvatarColor = (id: string) => {
-    const index = id.charCodeAt(0) % avatarColors.length
-    return avatarColors[index]
-  }
-
   return (
     <div>
       {/* Category filter bar */}
@@ -88,10 +71,10 @@ export default function DirectorioContent({ initialVenues, initialCategory }: Pr
         <div className="flex gap-2 min-w-min">
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors whitespace-nowrap ${
               selectedCategory === 'all'
-                ? 'bg-ink text-cream'
-                : 'border border-border bg-white text-ink hover:border-ink'
+                ? 'bg-brand-blue text-white'
+                : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-gray-800'
             }`}
           >
             Todos
@@ -100,10 +83,10 @@ export default function DirectorioContent({ initialVenues, initialCategory }: Pr
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors whitespace-nowrap ${
                 selectedCategory === cat.id
-                  ? 'bg-ink text-cream'
-                  : 'border border-border bg-white text-ink hover:border-ink'
+                  ? 'bg-brand-blue text-white'
+                  : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-gray-800'
               }`}
             >
               {cat.label}
@@ -115,62 +98,62 @@ export default function DirectorioContent({ initialVenues, initialCategory }: Pr
       {/* Venue list */}
       <div className={`transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
         {venueList.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {venueList.map((venue) => {
-              const initials = getInitials(venue.name)
-              const avatarColor = getAvatarColor(venue.id)
               const categoryLabel = VENUE_CATEGORY_LABELS[venue.category]
 
               return (
                 <Link
                   key={venue.id}
                   href={`/lugares/${venue.slug}`}
-                  className="block border border-border bg-white rounded-sm p-4 md:p-5 hover:shadow-md transition-shadow group"
+                  className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-slate-300 bg-white"
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Avatar */}
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm ${avatarColor}`}
-                    >
-                      {initials}
+                  {venue.image ? (
+                    <img
+                      src={venue.image}
+                      alt={venue.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-200">
+                      <span className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                        {getInitials(venue.name)}
+                      </span>
                     </div>
+                  )}
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-bold text-ink group-hover:text-terracota transition-colors">
-                        {venue.name}
-                      </h3>
+                  <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                    <span className="h-2.5 w-2.5 rounded-full bg-brand-blue" aria-hidden="true" />
+                    <span>{categoryLabel}</span>
+                  </div>
 
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs font-medium bg-pale px-2 py-0.5 rounded-sm">
-                          {categoryLabel}
-                        </span>
-                        {venue.city && (
-                          <span className="text-xs text-stone">📍 {venue.city}</span>
-                        )}
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-sm text-stone mt-2 line-clamp-1">
-                        {venue.id} {/* Placeholder — backend will include description in VenueListItem if needed */}
-                      </p>
+                  <div className="absolute inset-x-3 bottom-3 flex items-center gap-2">
+                    <div className="min-w-0 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                      <span className="block truncate">{venue.name}</span>
                     </div>
-
-                    {/* Chevron */}
-                    <div className="flex-shrink-0 text-stone group-hover:text-terracota transition-colors">
-                      →
-                    </div>
+                    <span className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand-blue">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </span>
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand-blue">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </span>
                   </div>
                 </Link>
               )
             })}
           </div>
         ) : (
-          <div className="bg-white border border-border rounded-sm p-8 text-center">
-            <p className="text-stone mb-4">No encontramos lugares en esta categoría.</p>
+          <div className="rounded-xl border border-slate-300 bg-white p-8 text-center">
+            <p className="mb-4 text-slate-500">No encontramos lugares en esta categoría.</p>
             <button
               onClick={() => setSelectedCategory('all')}
-              className="text-terracota hover:underline text-sm font-medium"
+              className="text-sm font-semibold text-brand-blue transition-colors hover:text-brand-blue-light"
             >
               Ver todos los lugares →
             </button>

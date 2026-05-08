@@ -1,27 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
-import { Playfair_Display, DM_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
 import RemoveUndefinedStyle from './RemoveUndefinedStyle.client'
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  weight: ['700', '900'],
-  style: ['normal', 'italic'],
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  weight: ['300', '400', '500'],
-})
-
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  variable: '--font-dm-mono',
-  weight: ['400', '500'],
-})
 
 export const metadata: Metadata = {
   title: {
@@ -44,11 +24,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html
-      lang="es"
-      className={`${playfair.variable} ${dmSans.variable} ${dmMono.variable}`}
-    >
-      <body className="bg-cream text-ink font-sans antialiased">
+    <html lang="es">
+      <body className="bg-brand-bg text-gray-900 font-sans antialiased">
         <RemoveUndefinedStyle />
         {children}
       </body>

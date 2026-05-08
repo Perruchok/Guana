@@ -19,7 +19,7 @@ async function getInitialData() {
     // Obtener eventos destacados y recientes
     const eventsRes = await Promise.all([
       events.featured().catch(() => ({ results: [] })),
-      events.list({ ordering: '-start_datetime' }).catch(() => ({ results: [] })),
+      events.list({ ordering: 'start_datetime' }).catch(() => ({ results: [] })),
       venues.list({ is_featured: true }).catch(() => ({ results: [] })),
     ])
     

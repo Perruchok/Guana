@@ -1,63 +1,103 @@
 // components/events/EventCard.tsx
 import Image from 'next/image'
-import type { EventListItem } from '@/types'
-import { EVENT_CATEGORY_LABELS, EVENT_TAG_CLASSES, formatPrice } from '@/lib/utils'
-import { formatDate, formatTime } from '@/lib/auth'
+import { MapPin } from 'lucide-react'
+import CategoryBadge from '@/components/ui/CategoryBadge'
 
-interface Props {
-  event: EventListItem
-  onClick: (event: EventListItem) => void
+interface EventCardProps {
+  id: string
+  title: string
+  category: string
+  startDatetime: string
+  venueName: string
+  imageUrl: string | null
+  slug: string
+  isFree: boolean
+  price: number
+  onClick: () => void
 }
 
-export default function EventCard({ event, onClick }: Props) {
-  const label    = EVENT_CATEGORY_LABELS[event.category]
-  const tagClass = EVENT_TAG_CLASSES[event.category]
-  const price    = formatPrice(event.price, event.is_free)
+const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+function getDateParts(startDatetime: string): { day: string; month: string } {
+  const match = startDatetime.match(/^(\d{4})-(\d{2})-(\d{2})/)
+
+  if (!match) {
+    return { day: '--', month: '---' }
+  }
+
+  const [, , monthValue, dayValue] = match
+  const monthIndex = Number.parseInt(monthValue, 10) - 1
+
+  if (monthIndex < 0 || monthIndex >= MONTHS_ES.length) {
+    return { day: dayValue, month: '---' }
+  }
+
+  return {
+    day: String(Number.parseInt(dayValue, 10)),
+    month: MONTHS_ES[monthIndex],
+  }
+}
+
+export default function EventCard({
+  id,
+  title,
+  category,
+  startDatetime,
+  venueName,
+  imageUrl,
+  slug,
+  isFree,
+  price,
+  onClick,
+}: EventCardProps) {
+  const { day, month } = getDateParts(startDatetime)
+  const priceLabel = isFree ? 'Gratis' : `MXN ${price.toLocaleString('es-MX')}`
 
   return (
     <article
-      onClick={() => onClick(event)}
-      className="border border-border rounded-sm overflow-hidden bg-white cursor-pointer
-                 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg group"
+      id={id}
+      onClick={onClick}
+      aria-label={`Ver evento ${title}`}
+      className="block rounded-xl bg-brand-dark overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer h-full"
     >
-      {/* Image */}
-      <div className="relative w-full h-40 bg-pale flex items-center justify-center">
-        {event.image ? (
-          <Image
-            src={event.image}
-            alt={event.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        ) : (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" strokeWidth="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-        )}
-      </div>
+        <div className="relative aspect-video bg-gray-800">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-800" aria-hidden="true" />
+          )}
 
-      {/* Body */}
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className={`font-mono-gk text-[0.6rem] tracking-widest uppercase px-2 py-0.5 rounded-sm font-medium ${tagClass}`}>
-            {label}
-          </span>
-          <span className="text-[0.65rem] text-stone">{price}</span>
+          <div className="absolute left-3 top-3">
+            <CategoryBadge category={category} />
+          </div>
+
+          <div className="absolute bottom-3 left-3 rounded bg-slate-800/80 px-2 py-1 text-white backdrop-blur">
+            <div className="text-lg font-bold leading-none">{day}</div>
+            <div className="text-xs uppercase leading-none">{month}</div>
+          </div>
         </div>
 
-        <h3 className="font-display font-bold text-[1rem] leading-snug text-ink mb-2 group-hover:text-terracota transition-colors">
-          {event.title}
-        </h3>
+        <div className="p-3">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-white">{title}</h3>
 
-        <p className="font-mono-gk text-[0.65rem] text-stone tracking-wide">
-          {formatDate(event.start_datetime)} · {formatTime(event.start_datetime)} hrs
-        </p>
+          <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
+            <MapPin size={12} aria-hidden="true" />
+            <span className="truncate">{venueName}</span>
+          </p>
 
-        <p className="text-xs text-stone mt-1">{event.venue_name}</p>
-      </div>
+          <div className="mt-3 flex items-center justify-between">
+            <span className={`text-sm font-semibold ${isFree ? 'text-green-400' : 'text-white'}`}>
+              {priceLabel}
+            </span>
+            <span className="text-xs text-brand-blue-light transition-colors hover:text-brand-blue">Ver mas »</span>
+          </div>
+        </div>
     </article>
   )
 }

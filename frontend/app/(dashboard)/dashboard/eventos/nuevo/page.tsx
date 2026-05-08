@@ -108,10 +108,10 @@ export default function NuevoEventoPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
-        <h1 className="font-display font-black text-3xl text-ink mb-2">
+        <h1 className="font-extrabold tracking-tight text-3xl text-gray-900 mb-2">
           Publicar evento
         </h1>
-        <p className="text-stone">
+        <p className="text-slate-500">
           Crea un nuevo evento en tu lugar
         </p>
       </div>
@@ -122,10 +122,10 @@ export default function NuevoEventoPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-border rounded-sm p-6 md:p-8">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-slate-200 rounded-sm p-6 md:p-8">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Título del evento
           </label>
           <input
@@ -133,7 +133,7 @@ export default function NuevoEventoPage() {
             type="text"
             value={form.title}
             onChange={handleTitleChange}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="Noche de Jazz en el Claustro"
             disabled={loading}
           />
@@ -141,10 +141,10 @@ export default function NuevoEventoPage() {
 
         {/* Slug preview */}
         {slug && (
-          <div className="bg-pale px-4 py-3 rounded-sm">
-            <p className="text-xs text-stone mb-1">Tu evento será accesible en:</p>
-            <p className="text-sm font-medium text-ink">
-              guana.mx/eventos/<span className="text-terracota">{slug}</span>
+          <div className="bg-slate-50 px-4 py-3 rounded-sm">
+            <p className="text-xs text-slate-500 mb-1">Tu evento será accesible en:</p>
+            <p className="text-sm font-medium text-gray-900">
+              guana.mx/eventos/<span className="text-brand-blue-light">{slug}</span>
             </p>
           </div>
         )}
@@ -159,7 +159,7 @@ export default function NuevoEventoPage() {
 
         {/* Venue selection */}
         {venuesLoading ? (
-          <div className="text-stone">Cargando tus lugares...</div>
+          <div className="text-slate-500">Cargando tus lugares...</div>
         ) : userVenues.length === 0 ? (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-sm">
             <p className="mb-2">Primero debes crear tu lugar.</p>
@@ -169,13 +169,13 @@ export default function NuevoEventoPage() {
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-ink mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Lugar donde ocurre el evento
             </label>
             <select
               value={form.venue}
               onChange={(e) => setForm({ ...form, venue: e.target.value })}
-              className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
               disabled={loading}
               required
             >
@@ -190,14 +190,14 @@ export default function NuevoEventoPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Descripción
           </label>
           <textarea
             required
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="Cuéntanos de qué se trata este evento..."
             rows={4}
             disabled={loading}
@@ -206,13 +206,13 @@ export default function NuevoEventoPage() {
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Categoría
           </label>
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value as EventCategory })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             disabled={loading}
           >
             {eventCategories.map((cat) => (
@@ -226,7 +226,7 @@ export default function NuevoEventoPage() {
         {/* Date/Time */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-ink mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Fecha y hora de inicio
             </label>
             <input
@@ -234,12 +234,12 @@ export default function NuevoEventoPage() {
               type="datetime-local"
               value={form.start_datetime}
               onChange={(e) => setForm({ ...form, start_datetime: e.target.value })}
-              className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
               disabled={loading}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Fecha y hora de término
             </label>
             <input
@@ -247,14 +247,14 @@ export default function NuevoEventoPage() {
               type="datetime-local"
               value={form.end_datetime}
               onChange={(e) => setForm({ ...form, end_datetime: e.target.value })}
-              className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
               disabled={loading}
             />
           </div>
         </div>
 
         {/* Price section */}
-        <div className="border-t border-pale pt-6">
+        <div className="border-t border-slate-200 pt-6">
           <label className="flex items-center gap-3 mb-4 cursor-pointer">
             <input
               type="checkbox"
@@ -269,19 +269,19 @@ export default function NuevoEventoPage() {
               className="rounded"
               disabled={loading}
             />
-            <span className="text-sm font-medium text-ink">Evento gratuito</span>
+            <span className="text-sm font-medium text-gray-900">Evento gratuito</span>
           </label>
 
           {!form.is_free && (
             <div>
-              <label className="block text-sm font-medium text-ink mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Precio (MXN)
               </label>
               <input
                 type="number"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-                className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+                className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
                 placeholder="150"
                 disabled={loading}
               />
@@ -291,14 +291,14 @@ export default function NuevoEventoPage() {
 
         {/* Capacity */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Capacidad (opcional)
           </label>
           <input
             type="number"
             value={form.capacity}
             onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="100"
             disabled={loading}
           />
@@ -306,22 +306,22 @@ export default function NuevoEventoPage() {
 
         {/* Registration URL */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             URL de registro (opcional)
           </label>
           <input
             type="url"
             value={form.registration_url}
             onChange={(e) => setForm({ ...form, registration_url: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="https://entradas.ejemplo.com"
             disabled={loading}
           />
         </div>
 
         {/* Status */}
-        <div className="border-t border-pale pt-6">
-          <p className="text-sm font-medium text-ink mb-3">¿Cómo quieres guardar el evento?</p>
+        <div className="border-t border-slate-200 pt-6">
+          <p className="text-sm font-medium text-gray-900 mb-3">¿Cómo quieres guardar el evento?</p>
           <label className="flex items-center gap-3 mb-3 cursor-pointer">
             <input
               type="radio"
@@ -331,7 +331,7 @@ export default function NuevoEventoPage() {
               onChange={() => setForm({ ...form, status: 'draft' })}
               disabled={loading}
             />
-            <span className="text-sm text-ink">Guardar como borrador</span>
+            <span className="text-sm text-gray-900">Guardar como borrador</span>
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -342,22 +342,22 @@ export default function NuevoEventoPage() {
               onChange={() => setForm({ ...form, status: 'published' })}
               disabled={loading}
             />
-            <span className="text-sm text-ink">Publicar ahora</span>
+            <span className="text-sm text-gray-900">Publicar ahora</span>
           </label>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-4 pt-4 border-t border-pale">
+        <div className="flex gap-4 pt-4 border-t border-slate-200">
           <button
             type="submit"
             disabled={loading || userVenues.length === 0}
-            className="flex-1 bg-terracota text-cream font-medium py-3 rounded-sm hover:bg-[#a84e23] transition-colors disabled:opacity-50"
+            className="flex-1 bg-brand-blue text-white font-medium py-3 rounded-sm hover:bg-brand-blue-light transition-colors disabled:opacity-50"
           >
             {loading ? 'Publicando...' : 'Publicar evento'}
           </button>
           <Link
             href="/dashboard/eventos"
-            className="px-6 py-3 border border-border text-ink rounded-sm hover:bg-pale transition-colors font-medium"
+            className="px-6 py-3 border border-slate-200 text-gray-900 rounded-sm hover:bg-slate-50 transition-colors font-medium"
           >
             Cancelar
           </Link>

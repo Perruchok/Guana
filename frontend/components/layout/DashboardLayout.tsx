@@ -30,13 +30,13 @@ export default function DashboardLayout({ children, user }: Props) {
   const isActive = (href: string) => pathname === href
 
   return (
-    <div className="flex flex-col h-screen bg-cream">
+    <div className="flex flex-col h-screen bg-brand-bg">
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <nav className="sticky top-0 z-50 bg-brand-navy border-b border-white/10">
         <div className="flex items-center px-6 py-3 h-[72px] max-w-full w-full">
           {/* Logo: always left */}
-          <Link href="/" className="font-display font-black text-xl text-ink">
-            Guana<span className="text-terracota">·</span>
+          <Link href="/" className="font-extrabold tracking-tight text-xl text-white">
+            GUANA GO!
           </Link>
 
           {/* Tabs: next to logo (or centered by layout) */}
@@ -47,8 +47,8 @@ export default function DashboardLayout({ children, user }: Props) {
                 href={tab.href}
                 className={`text-sm font-medium transition-colors pb-2 border-b-2 ${
                   isActive(tab.href)
-                    ? 'text-terracota border-terracota'
-                    : 'text-stone border-b-transparent hover:text-ink'
+                    ? 'text-white border-brand-blue'
+                    : 'text-slate-400 border-b-transparent hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -60,10 +60,10 @@ export default function DashboardLayout({ children, user }: Props) {
           <div className="ml-auto flex items-center gap-4">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-sm text-sm font-medium text-stone hover:bg-pale transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700 transition-colors"
               title="Cerrar sesión"
             >
-              <div className="w-6 h-6 rounded-full bg-terracota text-white text-xs flex items-center justify-center font-bold">
+              <div className="w-6 h-6 rounded-full bg-brand-blue text-white text-xs flex items-center justify-center font-bold">
                 {user.first_name.charAt(0).toUpperCase()}
               </div>
               <span className="hidden sm:inline">Salir</span>
@@ -72,7 +72,7 @@ export default function DashboardLayout({ children, user }: Props) {
         </div>
 
         {/* Mobile tab scroll (visible on small screens) */}
-        <div className="md:hidden overflow-x-auto border-t border-pale px-4">
+        <div className="md:hidden overflow-x-auto border-t border-white/10 px-4">
           <div className="flex gap-6">
             {tabs.map((tab) => (
               <Link
@@ -80,8 +80,8 @@ export default function DashboardLayout({ children, user }: Props) {
                 href={tab.href}
                 className={`flex-shrink-0 text-sm font-medium py-3 border-b-2 transition-colors ${
                   isActive(tab.href)
-                    ? 'text-terracota border-terracota'
-                    : 'text-stone border-b-transparent'
+                    ? 'text-white border-brand-blue'
+                    : 'text-slate-400 border-b-transparent'
                 }`}
               >
                 {tab.label}
@@ -96,7 +96,7 @@ export default function DashboardLayout({ children, user }: Props) {
         <div className="w-full max-w-4xl mx-auto px-6 py-8 md:py-12">
           {/* Top greeting + banner */}
           <div className="mb-8">
-            <h1 className="font-display font-black text-2xl text-ink mb-6">
+            <h1 className="font-bold text-2xl text-gray-900 mb-6">
               Hola, {user.first_name}
             </h1>
             

@@ -67,16 +67,16 @@ export default function SuscripcionPage() {
   }
 
   if (loading) {
-    return <div className="text-center text-stone">Cargando planes...</div>
+    return <div className="text-center text-slate-500">Cargando planes...</div>
   }
 
   return (
     <div>
       <div className="mb-10">
-        <h1 className="font-display font-black text-3xl text-ink mb-2">
+        <h1 className="font-extrabold tracking-tight text-3xl text-gray-900 mb-2">
           Planes y precios
         </h1>
-        <p className="text-stone">
+        <p className="text-slate-500">
           Elige el plan que mejor se adapte a tus necesidades
         </p>
       </div>
@@ -122,34 +122,34 @@ export default function SuscripcionPage() {
               key={plan.id}
               className={`bg-white rounded-sm border-2 p-6 md:p-8 flex flex-col transition-all ${
                 isCurrentPlan
-                  ? 'border-terracota shadow-lg'
-                  : 'border-border hover:border-pale'
+                  ? 'border-brand-blue shadow-lg'
+                  : 'border-slate-200 hover:border-slate-200'
               }`}
             >
               {/* Plan header */}
               {isCurrentPlan && (
-                <div className="text-xs font-medium text-terracota tracking-widest uppercase mb-3">
+                <div className="text-xs font-medium text-brand-blue-light tracking-widest uppercase mb-3">
                   ✓ Plan actual
                 </div>
               )}
 
-              <h3 className="font-display font-bold text-xl text-ink mb-2">
+              <h3 className="font-bold tracking-tight text-xl text-gray-900 mb-2">
                 {plan.name}
               </h3>
 
               {/* Price */}
               <div className="mb-6">
-                <span className="font-display font-black text-3xl text-ink">
+                <span className="font-extrabold tracking-tight text-3xl text-gray-900">
                   ${plan.price_monthly.toLocaleString('es-MX')}
                 </span>
-                <span className="text-stone text-sm">/mes</span>
+                <span className="text-slate-500 text-sm">/mes</span>
               </div>
 
               {/* Features */}
               <ul className="space-y-2 mb-8 flex-1">
                 {(planFeatures[plan.id] || []).map((feature, i) => (
-                  <li key={i} className="text-sm text-stone flex items-start gap-2">
-                    <span className="text-terracota mt-0.5">✓</span>
+                  <li key={i} className="text-sm text-slate-500 flex items-start gap-2">
+                    <span className="text-brand-blue-light mt-0.5">✓</span>
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -159,7 +159,7 @@ export default function SuscripcionPage() {
               {isCurrentPlan ? (
                 <button
                   disabled
-                  className="w-full bg-pale text-stone py-3 rounded-sm font-medium cursor-default"
+                  className="w-full bg-slate-50 text-slate-500 py-3 rounded-sm font-medium cursor-default"
                 >
                   Plan actual
                 </button>
@@ -167,7 +167,7 @@ export default function SuscripcionPage() {
                 <button
                   onClick={() => handleUpgrade(plan.id)}
                   disabled={upgrading === plan.id}
-                  className="w-full bg-ink text-cream py-3 rounded-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
+                  className="w-full bg-brand-navy text-white py-3 rounded-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
                 >
                   {upgrading === plan.id ? 'Actualizando...' : 'Actualizar'}
                 </button>
@@ -178,10 +178,10 @@ export default function SuscripcionPage() {
       </div>
 
       {/* Info note */}
-      <div className="bg-pale border border-border rounded-sm p-6 text-center">
-        <p className="text-sm text-stone">
+      <div className="bg-slate-50 border border-slate-200 rounded-sm p-6 text-center">
+        <p className="text-sm text-slate-500">
           Los pagos con tarjeta estarán disponibles próximamente.{' '}
-          <a href="mailto:hola@guana.mx" className="text-terracota hover:underline font-medium">
+          <a href="mailto:hola@guana.mx" className="text-brand-blue-light hover:underline font-medium">
             Contáctanos
           </a>{' '}
           para activar tu plan.

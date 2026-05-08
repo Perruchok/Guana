@@ -1,17 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import EventCard from '@/components/events/EventCard'
-import EventModal from '@/components/events/EventModal'
-import type { Event, EventListItem } from '@/types'
+import type { Event } from '@/types'
 
 interface EventsSectionProps {
   events: Event[]
 }
 
 export default function EventsSection({ events }: EventsSectionProps) {
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
-
   return (
     <>
       <div className="space-y-4">
@@ -25,24 +21,24 @@ export default function EventsSection({ events }: EventsSectionProps) {
               <div
                 key={event.id}
                 className="w-80 md:w-auto flex-shrink-0 md:flex-shrink cursor-pointer"
-                onClick={() => setSelectedEvent(event)}
               >
                 <EventCard
-                  event={event as EventListItem}
-                  onClick={() => setSelectedEvent(event)}
+                  id={event.id}
+                  title={event.title}
+                  category={event.category}
+                  startDatetime={event.start_datetime}
+                  venueName={event.venue_name}
+                  imageUrl={event.image}
+                  slug={event.slug}
+                  isFree={event.is_free}
+                  price={event.price}
+                  onClick={() => {}}
                 />
               </div>
             ))}
           </div>
         </div>
       </div>
-
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-        />
-      )}
     </>
   )
 }

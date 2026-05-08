@@ -75,10 +75,10 @@ export default function OnboardingPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
-        <h1 className="font-display font-black text-3xl text-ink mb-2">
+        <h1 className="font-extrabold tracking-tight text-3xl text-gray-900 mb-2">
           Crea tu lugar
         </h1>
-        <p className="text-stone">
+        <p className="text-slate-500">
           Configura tu espacio o negocio para publicar eventos
         </p>
       </div>
@@ -89,10 +89,10 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-border rounded-sm p-6 md:p-8">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-slate-200 rounded-sm p-6 md:p-8">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Nombre de tu negocio o proyecto
           </label>
           <input
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
             type="text"
             value={form.name}
             onChange={handleNameChange}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="Galería Municipal"
             disabled={loading}
           />
@@ -108,23 +108,23 @@ export default function OnboardingPage() {
 
         {/* Slug preview */}
         {slug && (
-          <div className="bg-pale px-4 py-3 rounded-sm">
-            <p className="text-xs text-stone mb-1">Tu página será:</p>
-            <p className="text-sm font-medium text-ink">
-              guanaknow.mx/lugares/<span className="text-terracota">{slug}</span>
+          <div className="bg-slate-50 px-4 py-3 rounded-sm">
+            <p className="text-xs text-slate-500 mb-1">Tu página será:</p>
+            <p className="text-sm font-medium text-gray-900">
+              guanaknow.mx/lugares/<span className="text-brand-blue-light">{slug}</span>
             </p>
           </div>
         )}
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Categoría
           </label>
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value as VenueCategory })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             disabled={loading}
           >
             {categories.map((cat) => (
@@ -137,13 +137,13 @@ export default function OnboardingPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Descripción
           </label>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="Cuéntanos sobre tu lugar..."
             rows={4}
             disabled={loading}
@@ -152,14 +152,14 @@ export default function OnboardingPage() {
 
         {/* Address */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Dirección
           </label>
           <input
             type="text"
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="Calle Principal 123"
             disabled={loading}
           />
@@ -167,14 +167,14 @@ export default function OnboardingPage() {
 
         {/* City */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Ciudad
           </label>
           <input
             type="text"
             value={form.city}
             onChange={(e) => setForm({ ...form, city: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="Guanajuato"
             disabled={loading}
           />
@@ -182,14 +182,14 @@ export default function OnboardingPage() {
 
         {/* Phone */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Teléfono
           </label>
           <input
             type="tel"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="+52 (555) 123-4567"
             disabled={loading}
           />
@@ -197,14 +197,14 @@ export default function OnboardingPage() {
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Correo electrónico
           </label>
           <input
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="contacto@lugar.mx"
             disabled={loading}
           />
@@ -212,14 +212,14 @@ export default function OnboardingPage() {
 
         {/* Website */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Sitio web (opcional)
           </label>
           <input
             type="url"
             value={form.website}
             onChange={(e) => setForm({ ...form, website: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             placeholder="https://ejemplo.com"
             disabled={loading}
           />
@@ -230,13 +230,13 @@ export default function OnboardingPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-terracota text-cream font-medium py-3 rounded-sm hover:bg-[#a84e23] transition-colors disabled:opacity-50"
+            className="flex-1 bg-brand-blue text-white font-medium py-3 rounded-sm hover:bg-brand-blue-light transition-colors disabled:opacity-50"
           >
             {loading ? 'Creando...' : 'Crear lugar'}
           </button>
           <Link
             href="/dashboard"
-            className="px-6 py-3 border border-border text-ink rounded-sm hover:bg-pale transition-colors font-medium"
+            className="px-6 py-3 border border-slate-200 text-gray-900 rounded-sm hover:bg-slate-50 transition-colors font-medium"
           >
             Completar después →
           </Link>

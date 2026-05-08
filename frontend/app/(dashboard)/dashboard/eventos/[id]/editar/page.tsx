@@ -137,8 +137,8 @@ export default function EditarEventoPage() {
 
   if (loading) {
     return (
-      <div className="text-center text-stone">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-terracota border-t-transparent mx-auto mb-4"></div>
+      <div className="text-center text-slate-500">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-blue border-t-transparent mx-auto mb-4"></div>
         Cargando evento...
       </div>
     )
@@ -155,10 +155,10 @@ export default function EditarEventoPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
-        <h1 className="font-display font-black text-3xl text-ink mb-2">
+        <h1 className="font-extrabold tracking-tight text-3xl text-gray-900 mb-2">
           Editar evento
         </h1>
-        <p className="text-stone">
+        <p className="text-slate-500">
           Actualiza los detalles de tu evento
         </p>
       </div>
@@ -174,10 +174,10 @@ export default function EditarEventoPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-border rounded-sm p-6 md:p-8 mb-6">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-slate-200 rounded-sm p-6 md:p-8 mb-6">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Título del evento
           </label>
           <input
@@ -185,22 +185,22 @@ export default function EditarEventoPage() {
             type="text"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             disabled={saving || deleting}
           />
         </div>
 
         {/* Slug preview */}
-        <div className="bg-pale px-4 py-3 rounded-sm">
-          <p className="text-xs text-stone mb-1">Tu evento está en:</p>
-          <p className="text-sm font-medium text-ink">
-            guana.mx/eventos/<span className="text-terracota">{event.slug}</span>
+        <div className="bg-slate-50 px-4 py-3 rounded-sm">
+          <p className="text-xs text-slate-500 mb-1">Tu evento está en:</p>
+          <p className="text-sm font-medium text-gray-900">
+            guana.mx/eventos/<span className="text-brand-blue-light">{event.slug}</span>
           </p>
         </div>
 
         {/* Venue selection */}
         {venuesLoading ? (
-          <div className="text-stone">Cargando tus lugares...</div>
+          <div className="text-slate-500">Cargando tus lugares...</div>
         ) : userVenues.length === 0 ? (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-sm">
             <p className="mb-2">No tienes lugares registrados.</p>
@@ -210,13 +210,13 @@ export default function EditarEventoPage() {
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-ink mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Lugar donde ocurre el evento
             </label>
             <select
               value={form.venue}
               onChange={(e) => setForm({ ...form, venue: e.target.value })}
-              className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
               disabled={saving || deleting}
               required
             >
@@ -231,14 +231,14 @@ export default function EditarEventoPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Descripción
           </label>
           <textarea
             required
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             rows={4}
             disabled={saving || deleting}
           />
@@ -246,13 +246,13 @@ export default function EditarEventoPage() {
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Categoría
           </label>
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value as EventCategory })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             disabled={saving || deleting}
           >
             {eventCategories.map((cat) => (
@@ -266,7 +266,7 @@ export default function EditarEventoPage() {
         {/* Date/Time */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-ink mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Fecha y hora de inicio
             </label>
             <input
@@ -274,12 +274,12 @@ export default function EditarEventoPage() {
               type="datetime-local"
               value={form.start_datetime}
               onChange={(e) => setForm({ ...form, start_datetime: e.target.value })}
-              className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
               disabled={saving || deleting}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Fecha y hora de término
             </label>
             <input
@@ -287,14 +287,14 @@ export default function EditarEventoPage() {
               type="datetime-local"
               value={form.end_datetime}
               onChange={(e) => setForm({ ...form, end_datetime: e.target.value })}
-              className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
               disabled={saving || deleting}
             />
           </div>
         </div>
 
         {/* Price section */}
-        <div className="border-t border-pale pt-6">
+        <div className="border-t border-slate-200 pt-6">
           <label className="flex items-center gap-3 mb-4 cursor-pointer">
             <input
               type="checkbox"
@@ -309,19 +309,19 @@ export default function EditarEventoPage() {
               className="rounded"
               disabled={saving || deleting}
             />
-            <span className="text-sm font-medium text-ink">Evento gratuito</span>
+            <span className="text-sm font-medium text-gray-900">Evento gratuito</span>
           </label>
 
           {!form.is_free && (
             <div>
-              <label className="block text-sm font-medium text-ink mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Precio (MXN)
               </label>
               <input
                 type="number"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-                className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+                className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
                 disabled={saving || deleting}
               />
             </div>
@@ -330,35 +330,35 @@ export default function EditarEventoPage() {
 
         {/* Capacity */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Capacidad (opcional)
           </label>
           <input
             type="number"
             value={form.capacity}
             onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             disabled={saving || deleting}
           />
         </div>
 
         {/* Registration URL */}
         <div>
-          <label className="block text-sm font-medium text-ink mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             URL de registro (opcional)
           </label>
           <input
             type="url"
             value={form.registration_url}
             onChange={(e) => setForm({ ...form, registration_url: e.target.value })}
-            className="w-full border border-border bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-ink"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
             disabled={saving || deleting}
           />
         </div>
 
         {/* Status */}
-        <div className="border-t border-pale pt-6">
-          <p className="text-sm font-medium text-ink mb-3">Estado del evento</p>
+        <div className="border-t border-slate-200 pt-6">
+          <p className="text-sm font-medium text-gray-900 mb-3">Estado del evento</p>
           <label className="flex items-center gap-3 mb-3 cursor-pointer">
             <input
               type="radio"
@@ -368,7 +368,7 @@ export default function EditarEventoPage() {
               onChange={() => setForm({ ...form, status: 'draft' })}
               disabled={saving || deleting}
             />
-            <span className="text-sm text-ink">Borrador (no visible públicamente)</span>
+            <span className="text-sm text-gray-900">Borrador (no visible públicamente)</span>
           </label>
           <label className="flex items-center gap-3 mb-3 cursor-pointer">
             <input
@@ -379,7 +379,7 @@ export default function EditarEventoPage() {
               onChange={() => setForm({ ...form, status: 'published' })}
               disabled={saving || deleting}
             />
-            <span className="text-sm text-ink">Publicado (visible públicamente)</span>
+            <span className="text-sm text-gray-900">Publicado (visible públicamente)</span>
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -390,22 +390,22 @@ export default function EditarEventoPage() {
               onChange={() => setForm({ ...form, status: 'cancelled' })}
               disabled={saving || deleting}
             />
-            <span className="text-sm text-ink">Cancelado</span>
+            <span className="text-sm text-gray-900">Cancelado</span>
           </label>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-4 pt-4 border-t border-pale">
+        <div className="flex gap-4 pt-4 border-t border-slate-200">
           <button
             type="submit"
             disabled={saving || deleting || venuesLoading}
-            className="flex-1 bg-terracota text-cream font-medium py-3 rounded-sm hover:bg-[#a84e23] transition-colors disabled:opacity-50"
+            className="flex-1 bg-brand-blue text-white font-medium py-3 rounded-sm hover:bg-brand-blue-light transition-colors disabled:opacity-50"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
           <Link
             href="/dashboard/eventos"
-            className="px-6 py-3 border border-border text-ink rounded-sm hover:bg-pale transition-colors font-medium"
+            className="px-6 py-3 border border-slate-200 text-gray-900 rounded-sm hover:bg-slate-50 transition-colors font-medium"
           >
             Cancelar
           </Link>

@@ -4,8 +4,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Event } from '@/types'
-import { EVENT_CATEGORY_LABELS, EVENT_TAG_CLASSES, formatPrice, mapsLink, shareEvent } from '@/lib/utils'
+import { formatPrice, mapsLink, shareEvent } from '@/lib/utils'
 import { formatDate, formatTime } from '@/lib/auth'
+import CategoryBadge from '@/components/ui/CategoryBadge'
 import { useEffect } from 'react'
 
 interface Props {
@@ -23,28 +24,24 @@ export default function EventModal({ event, onClose }: Props) {
 
   if (!event) return null
 
-  const label    = EVENT_CATEGORY_LABELS[event.category]
-  const tagClass = EVENT_TAG_CLASSES[event.category]
-  const price    = formatPrice(event.price, event.is_free)
+  const price = formatPrice(event.price, event.is_free)
 
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center bg-ink/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="animate-modal bg-cream border border-border rounded-sm w-[90%] max-w-[620px] max-h-[90vh] overflow-y-auto p-8">
+      <div className="animate-modal bg-brand-dark rounded-xl w-[90%] max-w-[620px] max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="bg-brand-navy px-6 py-5 flex items-start justify-between">
           <div className="flex-1 pr-4">
-            <span className={`font-mono-gk text-[0.6rem] tracking-widest uppercase px-2 py-0.5 rounded-sm font-medium inline-block mb-2 ${tagClass}`}>
-              {label}
-            </span>
-            <h2 className="font-display font-bold text-2xl leading-tight">{event.title}</h2>
+            <CategoryBadge category={event.category} />
+            <h2 className="font-bold text-2xl leading-tight text-white mt-2">{event.title}</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-stone hover:text-terracota transition-colors shrink-0 p-1"
+            className="text-slate-400 hover:text-white transition-colors shrink-0 p-1"
             aria-label="Cerrar"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -54,7 +51,7 @@ export default function EventModal({ event, onClose }: Props) {
         </div>
 
         {/* Image */}
-        <div className="relative w-full h-48 bg-pale rounded-sm mb-6 flex items-center justify-center overflow-hidden">
+        <div className="relative w-full h-48 bg-slate-800 mb-6 flex items-center justify-center overflow-hidden">
           {event.image ? (
             <Image src={event.image} alt={event.title} fill className="object-cover" />
           ) : (
@@ -67,35 +64,35 @@ export default function EventModal({ event, onClose }: Props) {
         </div>
 
         {/* Description */}
-        <p className="text-sm text-stone leading-relaxed mb-6">{event.description}</p>
+        <p className="text-sm text-slate-300 leading-relaxed mb-6 px-6">{event.description}</p>
 
         {/* Meta grid */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-4 px-6">
           <div>
-            <p className="label mb-1">Fecha</p>
-            <p className="text-sm font-medium">{formatDate(event.start_datetime)}</p>
+            <p className="text-xs font-medium text-slate-400 mb-1">Fecha</p>
+            <p className="text-sm font-medium text-white">{formatDate(event.start_datetime)}</p>
           </div>
           <div>
-            <p className="label mb-1">Hora</p>
-            <p className="text-sm font-medium">{formatTime(event.start_datetime)} hrs</p>
+            <p className="text-xs font-medium text-slate-400 mb-1">Hora</p>
+            <p className="text-sm font-medium text-white">{formatTime(event.start_datetime)} hrs</p>
           </div>
           <div>
-            <p className="label mb-1">Lugar</p>
-            <p className="text-sm font-medium">{event.venue_name}</p>
+            <p className="text-xs font-medium text-slate-400 mb-1">Lugar</p>
+            <p className="text-sm font-medium text-white">{event.venue_name}</p>
           </div>
           <div>
-            <p className="label mb-1">Entrada</p>
-            <p className="text-sm font-medium">{price}</p>
+            <p className="text-xs font-medium text-slate-400 mb-1">Entrada</p>
+            <p className="text-sm font-medium text-white">{price}</p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-border">
+        <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-slate-700 px-6 pb-6">
           <a
             href={mapsLink({ name: event.venue_name, address: '', city: 'Guanajuato' })}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 border border-sage text-sage text-xs font-medium px-4 py-2 rounded-sm hover:bg-sage hover:text-white transition-colors"
+            className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue-light text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
@@ -106,7 +103,7 @@ export default function EventModal({ event, onClose }: Props) {
 
           <button
             onClick={() => shareEvent(event.title, window.location.href)}
-            className="flex items-center gap-2 border border-border text-stone text-xs font-medium px-4 py-2 rounded-sm hover:border-ink hover:text-ink transition-colors"
+            className="flex items-center gap-2 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -118,7 +115,7 @@ export default function EventModal({ event, onClose }: Props) {
           <Link
             href={`/lugares/${event.venue_slug}`}
             onClick={onClose}
-            className="ml-auto flex items-center gap-2 bg-terracota text-cream text-xs font-medium px-4 py-2 rounded-sm hover:bg-[#a84e23] transition-colors"
+            className="ml-auto flex items-center gap-2 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
           >
             Ver lugar →
           </Link>

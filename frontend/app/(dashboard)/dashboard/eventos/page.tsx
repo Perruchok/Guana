@@ -47,7 +47,7 @@ export default function EventosPage() {
   }
 
   const getStatusColor = (status: string) => {
-    if (status === 'draft') return 'bg-stone-100 text-stone-800'
+    if (status === 'draft') return 'bg-stone-100 text-slate-500-800'
     if (status === 'published') return 'bg-green-50 text-green-800'
     if (status === 'cancelled') return 'bg-red-50 text-red-800'
     return 'bg-gray-100 text-gray-800'
@@ -57,10 +57,10 @@ export default function EventosPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display font-black text-3xl text-ink">Mis eventos</h1>
+        <h1 className="font-extrabold tracking-tight text-3xl text-gray-900">Mis eventos</h1>
         <Link
           href="/dashboard/eventos/nuevo"
-          className="bg-terracota text-cream px-4 py-2 rounded-sm font-medium hover:bg-[#a84e23] transition-colors text-sm"
+          className="bg-brand-blue text-white px-4 py-2 rounded-sm font-medium hover:bg-brand-blue-light transition-colors text-sm"
         >
           + Publicar evento
         </Link>
@@ -73,23 +73,23 @@ export default function EventosPage() {
       )}
 
       {loading ? (
-        <div className="bg-white border border-border rounded-sm p-12 text-center">
+        <div className="bg-white border border-slate-200 rounded-sm p-12 text-center">
           <div className="inline-block">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-terracota border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-blue border-t-transparent"></div>
           </div>
-          <p className="text-stone mt-4">Cargando tus eventos...</p>
+          <p className="text-slate-500 mt-4">Cargando tus eventos...</p>
         </div>
       ) : eventList.length > 0 ? (
-        <div className="bg-white border border-border rounded-sm overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-border bg-pale">
+              <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left font-medium text-stone">Título</th>
-                  <th className="px-6 py-3 text-left font-medium text-stone">Categoría</th>
-                  <th className="px-6 py-3 text-left font-medium text-stone">Fecha</th>
-                  <th className="px-6 py-3 text-left font-medium text-stone">Estado</th>
-                  <th className="px-6 py-3 text-right font-medium text-stone">Acciones</th>
+                  <th className="px-6 py-3 text-left font-medium text-slate-500">Título</th>
+                  <th className="px-6 py-3 text-left font-medium text-slate-500">Categoría</th>
+                  <th className="px-6 py-3 text-left font-medium text-slate-500">Fecha</th>
+                  <th className="px-6 py-3 text-left font-medium text-slate-500">Estado</th>
+                  <th className="px-6 py-3 text-right font-medium text-slate-500">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -97,14 +97,14 @@ export default function EventosPage() {
                   const categoryLabel = EVENT_CATEGORY_LABELS[event.category]
                   const tagClass = EVENT_TAG_CLASSES[event.category]
                   return (
-                    <tr key={event.id} className="hover:bg-pale transition-colors">
-                      <td className="px-6 py-4 font-medium text-ink">{event.title}</td>
+                    <tr key={event.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-900">{event.title}</td>
                       <td className="px-6 py-4">
                         <span className={`text-xs px-2 py-1 rounded-sm font-medium ${tagClass}`}>
                           {categoryLabel}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-stone">
+                      <td className="px-6 py-4 text-slate-500">
                         <div>{formatDate(event.start_datetime)}</div>
                         <div className="text-xs">{formatTime(event.start_datetime)} hrs</div>
                       </td>
@@ -121,7 +121,7 @@ export default function EventosPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/dashboard/eventos/${event.id}/editar`}
-                            className="text-terracota hover:underline text-xs font-medium"
+                            className="text-brand-blue-light hover:underline text-xs font-medium"
                           >
                             Editar
                           </Link>
@@ -141,21 +141,21 @@ export default function EventosPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-border rounded-sm p-12 text-center">
+        <div className="bg-white border border-slate-200 rounded-sm p-12 text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-pale rounded-full flex items-center justify-center text-3xl">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-3xl">
               📅
             </div>
           </div>
-          <h2 className="font-display font-bold text-xl text-ink mb-2">
+          <h2 className="font-bold tracking-tight text-xl text-gray-900 mb-2">
             Aún no tienes eventos
           </h2>
-          <p className="text-stone mb-8 max-w-sm mx-auto">
+          <p className="text-slate-500 mb-8 max-w-sm mx-auto">
             Publica tu primer evento para que aparezca aquí. ¡Los visitantes podrán descubrir lo que tienes para ofrecer!
           </p>
           <Link
             href="/dashboard/eventos/nuevo"
-            className="inline-block bg-terracota text-cream px-6 py-3 rounded-sm font-medium hover:bg-[#a84e23] transition-colors"
+            className="inline-block bg-brand-blue text-white px-6 py-3 rounded-sm font-medium hover:bg-brand-blue-light transition-colors"
           >
             + Publicar evento
           </Link>
@@ -166,14 +166,14 @@ export default function EventosPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-sm p-6 max-w-sm w-full">
-            <h2 className="font-display font-bold text-lg text-ink mb-2">Confirmar eliminación</h2>
-            <p className="text-stone text-sm mb-6">
+            <h2 className="font-bold tracking-tight text-lg text-gray-900 mb-2">Confirmar eliminación</h2>
+            <p className="text-slate-500 text-sm mb-6">
               ¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 border border-border text-ink px-4 py-2 rounded-sm hover:bg-pale transition-colors"
+                className="flex-1 border border-slate-200 text-gray-900 px-4 py-2 rounded-sm hover:bg-slate-50 transition-colors"
               >
                 Cancelar
               </button>

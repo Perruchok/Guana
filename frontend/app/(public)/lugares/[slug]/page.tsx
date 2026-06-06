@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArrowLeft, ArrowUpRight, Globe, Mail, MapPin, Phone } from 'lucide-react'
 import { venues, events } from '@/lib/api'
 import { VENUE_CATEGORY_LABELS } from '@/lib/utils'
 import VenueGallerySection from '@/components/venues/VenueGallerySection'
@@ -10,6 +11,23 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { notFound } from 'next/navigation'
 import type { Venue, Event } from '@/types'
+
+function getVenueCategoryClasses(category: string) {
+  const palette: Record<string, string> = {
+    restaurante: 'bg-brand-blue text-white',
+    bar: 'bg-brand-yellow text-gray-900',
+    cafe: 'bg-orange-500 text-white',
+    hotel: 'bg-indigo-600 text-white',
+    galeria: 'bg-violet-600 text-white',
+    museo: 'bg-rose-600 text-white',
+    teatro: 'bg-brand-slate text-white',
+    foro: 'bg-teal-600 text-white',
+    espacio: 'bg-green-600 text-white',
+    otro: 'bg-brand-slate text-white',
+  }
+
+  return palette[category.toLowerCase()] ?? 'bg-brand-slate text-white'
+}
 
 async function getVenueBySlug(slug: string): Promise<Venue | null> {
   try {
@@ -84,222 +102,185 @@ export default async function VenuePage({ params }: { params: { slug: string } }
 
   const categoryLabel = VENUE_CATEGORY_LABELS[venue.category] || venue.category
   const galleryImages = venue.image ? [venue.image] : []
+  const categoryClasses = getVenueCategoryClasses(venue.category)
+  const locationLabel = [venue.address, venue.city].filter(Boolean).join(', ')
 
   return (
     <>
       <Navbar />
-      <main className="bg-cream min-h-screen">
-        {/* SECTION 1: HERO HEADER */}
-        {venue.image ? (
-          <div className="relative w-full h-80 md:h-96 overflow-hidden">
-            <Image
-              src={venue.image}
-              alt={venue.name}
-              fill
-              className="object-cover"
-              priority
-              unoptimized={true}
-            />
-            {/* Dark gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
-            
-            {/* Venue name + category overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-              <h1 className="font-display font-black text-3xl md:text-4xl text-white mb-2">
-                {venue.name}
-              </h1>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex px-3 py-1 bg-terracota/90 text-cream text-xs font-semibold rounded-sm">
-                  {categoryLabel}
-                </span>
-                {venue.website && (
-                  <a
-                    href={venue.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/80 hover:text-white text-sm inline-flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4m-4-6l6-6m0 0l-6 6m6-6v12" />
-                    </svg>
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-pale border-b border-border">
-            <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
-              <h1 className="font-display font-black text-4xl text-ink mb-3">
-                {venue.name}
-              </h1>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="inline-flex px-3 py-1 bg-terracota text-cream text-xs font-semibold rounded-sm">
-                  {categoryLabel}
-                </span>
-                <span className="text-stone text-sm">{venue.city}</span>
-                {venue.website && (
-                  <a
-                    href={venue.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-terracota hover:underline text-sm font-medium inline-flex items-center gap-1"
-                  >
-                    Sitio web
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4m-4-6l6-6m0 0l-6 6m6-6v12" />
-                    </svg>
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+      <main className="min-h-screen bg-brand-bg">
+        <div className="mx-auto max-w-6xl px-6 py-12 md:px-10 md:py-16">
+          <div className="border-t border-slate-300 pt-8">
+            <Link
+              href="/directorio"
+              className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-gray-900"
+            >
+              <ArrowLeft size={14} aria-hidden="true" />
+              Volver al directorio
+            </Link>
 
-        {/* Main content container */}
-        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 space-y-16">
-          {/* SECTION 2: VENUE INFO GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Left column: Description + contact in text */}
-            <div className="md:col-span-2 space-y-4">
-              <h2 className="font-mono-gk text-sm text-stone uppercase tracking-wide">
-                Sobre este lugar
-              </h2>
-              <p className="text-ink leading-relaxed">
-                {venue.description}
-              </p>
+            <section className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-start">
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${categoryClasses}`}>
+                    {categoryLabel}
+                  </span>
+                  {venue.city && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <MapPin size={12} aria-hidden="true" />
+                      {venue.city}
+                    </span>
+                  )}
+                </div>
 
-              {/* Contact items as text list */}
-              <div className="space-y-2 mt-6 pt-6 border-t border-pale">
-                {venue.phone && (
-                  <div className="flex items-center gap-2 text-sm text-ink">
-                    <svg className="w-4 h-4 text-terracota flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773c.346.611.901 1.465 1.87 2.434s1.823 1.524 2.434 1.87l.773-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a2 2 0 01-2 2h-2.5A7.5 7.5 0 012 9.5V3z" />
-                    </svg>
-                    {venue.phone}
-                  </div>
-                )}
-                {venue.email && (
-                  <a
-                    href={`mailto:${venue.email}`}
-                    className="flex items-center gap-2 text-sm text-terracota hover:underline"
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                    {venue.email}
-                  </a>
-                )}
-                {venue.website && (
-                  <a
-                    href={venue.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-terracota hover:underline"
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4m-4-6l6-6m0 0l-6 6m6-6v12" />
-                    </svg>
-                    Sitio web
-                  </a>
-                )}
-              </div>
-            </div>
+                <div className="space-y-4">
+                  <h1 className="text-4xl font-extrabold uppercase italic tracking-tight text-brand-blue md:text-5xl">
+                    {venue.name}
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-relaxed text-slate-500 md:text-base">
+                    {venue.description || 'Explora este espacio en Guanajuato, revisa su ubicacion y encuentra los eventos que se presentan aqui.'}
+                  </p>
+                </div>
 
-            {/* Right column: Contact card */}
-            <div className="border border-border rounded-sm p-5 bg-white h-fit">
-              <h3 className="font-display font-semibold text-ink mb-4">
-                Información de contacto
-              </h3>
-              <div className="space-y-4">
-                {/* Address */}
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-terracota flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <p className="text-sm text-ink">
-                      {venue.address}, {venue.city}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-300 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ubicacion</p>
+                    <p className="mt-3 text-sm leading-relaxed text-gray-900">
+                      {locationLabel || 'Ubicacion disponible proximamente'}
                     </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-300 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Contacto</p>
+                    <div className="mt-3 space-y-3 text-sm text-gray-900">
+                      {venue.phone ? (
+                        <div className="flex items-center gap-2">
+                          <Phone size={14} className="text-brand-blue" aria-hidden="true" />
+                          <span>{venue.phone}</span>
+                        </div>
+                      ) : null}
+                      {venue.email ? (
+                        <a
+                          href={`mailto:${venue.email}`}
+                          className="flex items-center gap-2 text-brand-blue-light transition-colors hover:text-brand-blue"
+                        >
+                          <Mail size={14} aria-hidden="true" />
+                          {venue.email}
+                        </a>
+                      ) : null}
+                      {!venue.phone && !venue.email ? (
+                        <p className="text-slate-500">Sin datos de contacto publicados.</p>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
-                {/* Phone */}
-                {venue.phone && (
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-terracota flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773c.346.611.901 1.465 1.87 2.434s1.823 1.524 2.434 1.87l.773-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a2 2 0 01-2 2h-2.5A7.5 7.5 0 012 9.5V3z" />
-                    </svg>
-                    <p className="text-sm text-ink">{venue.phone}</p>
-                  </div>
-                )}
-
-                {/* Email */}
-                {venue.email && (
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-terracota flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                    <a href={`mailto:${venue.email}`} className="text-sm text-terracota hover:underline">
-                      {venue.email}
-                    </a>
-                  </div>
-                )}
-
-                {/* Website */}
-                {venue.website && (
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-terracota flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4m-4-6l6-6m0 0l-6 6m6-6v12" />
-                    </svg>
+                <div className="flex flex-wrap gap-3">
+                  {venue.website ? (
                     <a
                       href={venue.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-terracota hover:underline"
+                      className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-light"
                     >
-                      Visitar
+                      <Globe size={16} aria-hidden="true" />
+                      Visitar sitio web
                     </a>
+                  ) : null}
+                  {venue.email ? (
+                    <a
+                      href={`mailto:${venue.email}`}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:text-gray-900"
+                    >
+                      <Mail size={16} aria-hidden="true" />
+                      Contactar lugar
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm">
+                {venue.image ? (
+                  <div className="relative aspect-[4/5]">
+                    <Image
+                      src={venue.image}
+                      alt={venue.name}
+                      fill
+                      className="object-cover"
+                      priority
+                      unoptimized={true}
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-navy via-brand-navy/70 to-transparent p-5 text-white">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Espacio destacado</p>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <p className="text-lg font-semibold leading-tight">{venue.name}</p>
+                        {venue.website ? (
+                          <a
+                            href={venue.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-blue transition-colors hover:text-brand-blue-light"
+                            aria-label={`Abrir sitio web de ${venue.name}`}
+                          >
+                            <ArrowUpRight size={16} aria-hidden="true" />
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex aspect-[4/5] items-center justify-center bg-slate-200 p-8 text-center">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sin imagen principal</p>
+                      <p className="mt-2 text-sm text-slate-500">Este lugar aun no ha publicado una portada.</p>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
+            </section>
           </div>
 
-          {/* SECTION 3: IMAGE GALLERY */}
-          <VenueGallerySection images={galleryImages} venueOwnerId={venue.owner} />
+          <div className="mt-12 space-y-12">
+            <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm md:p-8">
+              <div className="max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Sobre este lugar</p>
+                <p className="mt-4 text-sm leading-relaxed text-gray-900 md:text-base">
+                  {venue.description || 'Este perfil se actualizara pronto con mas informacion sobre la experiencia, la programacion y los servicios de este lugar.'}
+                </p>
+              </div>
+            </section>
 
-          {/* SECTION 4: UPCOMING EVENTS */}
-          {venueEvents.length > 0 && (
-            <EventsSection events={venueEvents} />
-          )}
+            <VenueGallerySection images={galleryImages} venueOwnerId={venue.owner} />
 
-          {/* SECTION 5: GOOGLE MAPS EMBED */}
-          <VenueMap
-            address={venue.address}
-            city={venue.city}
-            venueName={venue.name}
-            latitude={venue.latitude}
-            longitude={venue.longitude}
-          />
+            {venueEvents.length > 0 && (
+              <EventsSection events={venueEvents} />
+            )}
+
+            <VenueMap
+              address={venue.address}
+              city={venue.city}
+              venueName={venue.name}
+              latitude={venue.latitude}
+              longitude={venue.longitude}
+            />
+          </div>
         </div>
 
-        {/* SECTION 6: CONTACT FOOTER STRIP */}
         {(venue.email || venue.website) && (
-          <div className="bg-pale border-t border-border py-8 px-6 md:px-8">
-            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-              <h3 className="font-display text-lg text-ink font-semibold">
-                {venue.name}
-              </h3>
+          <div className="mt-16 border-t border-slate-300 bg-white/70 px-6 py-8 backdrop-blur-sm md:px-10">
+            <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Siguiente paso</p>
+                <h3 className="mt-2 text-2xl font-bold text-gray-900">Conecta con {venue.name}</h3>
+              </div>
               <div className="flex items-center gap-4">
                 {venue.email && (
                   <a
                     href={`mailto:${venue.email}`}
-                    className="text-terracota hover:underline font-medium text-sm inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:text-gray-900"
                   >
-                    Escribir al lugar →
+                    <Mail size={16} aria-hidden="true" />
+                    Escribir al lugar
                   </a>
                 )}
                 {venue.website && (
@@ -307,9 +288,10 @@ export default async function VenuePage({ params }: { params: { slug: string } }
                     href={venue.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-terracota hover:underline font-medium text-sm inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-light"
                   >
-                    Visitar sitio web →
+                    <ArrowUpRight size={16} aria-hidden="true" />
+                    Visitar sitio web
                   </a>
                 )}
               </div>

@@ -9,18 +9,19 @@ interface EventsSectionProps {
 
 export default function EventsSection({ events }: EventsSectionProps) {
   return (
-    <>
-      <div className="space-y-4">
-        <h2 className="font-display font-black text-2xl text-ink">
-          Próximos eventos
-        </h2>
+    <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm md:p-8">
+      <div className="space-y-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Agenda</p>
+          <h2 className="mt-2 text-2xl font-bold text-gray-900">Proximos eventos</h2>
+        </div>
 
-        <div className="overflow-x-auto hide-scrollbar -mx-6 md:mx-0 px-6 md:px-0">
-          <div className="flex gap-4 pb-4 min-w-min md:min-w-full md:grid md:grid-cols-2 lg:grid-cols-3">
+        <div className="hide-scrollbar -mx-6 overflow-x-auto px-6 md:mx-0 md:px-0">
+          <div className="flex min-w-min gap-4 pb-4 md:min-w-full md:grid md:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => (
               <div
                 key={event.id}
-                className="w-80 md:w-auto flex-shrink-0 md:flex-shrink cursor-pointer"
+                className="w-80 flex-shrink-0 cursor-pointer md:w-auto md:flex-shrink"
               >
                 <EventCard
                   id={event.id}
@@ -39,6 +40,6 @@ export default function EventsSection({ events }: EventsSectionProps) {
           </div>
         </div>
       </div>
-    </>
+    </section>
   )
 }

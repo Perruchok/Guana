@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_2" data-name="Capa 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1227.83 407.68">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #ef5ca9;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        letter-spacing: -.06em;
+      }
+
+      .cls-4 {
+        fill: #4d4d4d;
+        font-family: DegularDisplay-Semibold, 'Degular Display';
+        font-size: 167.07px;
+        font-weight: 600;
+      }
+
+      .cls-5 {
+        letter-spacing: .05em;
+      }
+
+      .cls-6 {
+        letter-spacing: .04em;
+      }
+    </style>
+  </defs>
+  <g id="Capa_1-2" data-name="Capa 1">
+    <g>
+      <g>
+        <path class="cls-2" d="M1023.98,0H203.84C91.26,0,0,91.26,0,203.83h0c0,112.58,91.26,203.85,203.85,203.85h820.14c112.58,0,203.84-91.26,203.84-203.83h0c0-112.58-91.26-203.85-203.85-203.85ZM380.27,198.36c0,86.26-69.93,156.19-156.19,156.19h-20.69c-86.27,0-156.21-69.93-156.21-156.2S117.11,42.15,203.37,42.15h20.69c86.27,0,156.21,69.94,156.21,156.21h0Z"/>
+        <path class="cls-1" d="M224.06,42.15h-20.69c-86.26,0-156.2,69.93-156.2,156.2s69.94,156.2,156.21,156.2h20.69c86.26,0,156.19-69.92,156.19-156.19h0c0-86.28-69.94-156.22-156.21-156.22Z"/>
+      </g>
+      <text class="cls-4" transform="translate(444.34 259.17)"><tspan class="cls-6" x="0" y="0">T</tspan><tspan class="cls-5" x="88.88" y="0">E</tspan><tspan class="cls-3" x="180.43" y="0">A</tspan><tspan class="cls-6" x="265.97" y="0">TRO</tspan></text>
+    </g>
+  </g>
+</svg>

@@ -2,6 +2,7 @@
 // components/layout/Navbar.tsx
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { tokenStore } from '@/lib/auth'
@@ -48,11 +49,15 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200 bg-brand-bg">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="shrink-0 leading-none text-gray-900">
-          <div className="text-[2.1rem] font-extrabold uppercase tracking-tight">GUANA GOU!</div>
-          <div className="-mt-1 text-[0.74rem] font-semibold uppercase tracking-wide text-gray-900">
-            Agenda cultural de la ciudad
-          </div>
+        <Link href="/" aria-label="Inicio" className="shrink-0 leading-none">
+          <Image
+            src="/ICON/SVG/logo-icon-mob.svg"
+            alt="Guana Gou"
+            width={168}
+            height={64}
+            className="h-12 w-auto"
+            priority
+          />
         </Link>
 
         <div className="hidden h-full items-center gap-8 md:flex">

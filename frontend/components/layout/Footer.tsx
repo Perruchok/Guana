@@ -1,13 +1,20 @@
 // components/layout/Footer.tsx
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Footer() {
   return (
     <footer className="bg-brand-navy px-6 py-10 text-white md:px-10">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
         <div>
-          <Link href="/" className="text-xl font-extrabold tracking-tight text-white">
-            GUANA GO!
+          <Link href="/" aria-label="Inicio" className="inline-flex leading-none">
+            <Image
+              src="/ICON/SVG/Recurso 2.svg"
+              alt="Guana Gou"
+              width={268}
+              height={164}
+              // className="h-10 w-auto"
+            />
           </Link>
           <p className="mt-1 text-xs text-slate-400">Agenda Cultural de la Ciudad</p>
 
@@ -69,8 +76,8 @@ export default function Footer() {
         </div>
 
         <div>
-          <p className="text-sm text-slate-300">Tel. 728 284 3125</p>
-          <p className="text-sm text-slate-400">Ext. 159</p>
+          <p className="text-sm text-slate-300">Tel. 461 340 9554</p>
+          <p className="text-sm text-slate-400">Ext. 52</p>
           <p className="mt-2 text-xs text-slate-400">Lunes a Viernes de 9:00 am a 6:00 pm</p>
           <p className="text-xs text-slate-500">*Excepto días festivos</p>
           <Link href="/contacto" className="mt-2 block text-sm text-brand-blue hover:underline">

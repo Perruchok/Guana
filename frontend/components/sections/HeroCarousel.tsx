@@ -6,18 +6,27 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export interface HeroSlide {
-  title: string
-  subtitle: string
+  kind?: 'event' | 'ad'
   imageUrl: string
+  mobileImageUrl?: string
+  imageAlt?: string
+  title?: string
+  subtitle?: string
   ctaLabel?: string
   ctaHref?: string
+  href?: string
+  showOverlay?: boolean
 }
 
 interface HeroCarouselProps {
   slides: HeroSlide[]
 }
 
-function splitTitle(title: string): { firstLine: string; secondLine: string | null } {
+function splitTitle(title?: string): { firstLine: string; secondLine: string | null } {
+  if (!title) {
+    return { firstLine: '', secondLine: null }
+  }
+
   const [firstLineRaw, ...rest] = title.split('\n')
   const firstLine = firstLineRaw?.trim() ?? ''
   const secondLineText = rest.join(' ').trim()
@@ -61,44 +70,68 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative mx-6 mt-6 h-[480px] w-auto overflow-hidden rounded-3xl md:mx-10 md:h-[600px]"
+      className="relative mx-6 mt-6 aspect-square w-auto overflow-hidden rounded-3xl md:mx-10 md:h-[600px] md:aspect-auto"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {slides.map((slide, index) => {
         const { firstLine, secondLine } = splitTitle(slide.title)
         const isActive = index === currentIndex
+        const isAdSlide = slide.kind === 'ad'
+        const showOverlay = slide.showOverlay ?? !isAdSlide
+        const imageAlt = slide.imageAlt ?? slide.title ?? `Slide ${index + 1}`
+        const mobileImageUrl = slide.mobileImageUrl ?? slide.imageUrl
+        const hasTextContent = Boolean(slide.title || slide.subtitle || slide.ctaLabel)
 
         return (
           <div
-            key={`${slide.title}-${index}`}
+            key={`${slide.imageUrl}-${index}`}
             className={`absolute inset-0 transition-opacity duration-500 ${
               isActive ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
             aria-hidden={!isActive}
           >
-            <Image src={slide.imageUrl} alt={slide.title} fill className="object-cover" priority={index === 0} />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+            {slide.mobileImageUrl ? (
+              <picture>
+                <source media="(max-width: 767px)" srcSet={mobileImageUrl} />
+                <img src={slide.imageUrl} alt={imageAlt} className="absolute inset-0 h-full w-full object-cover" loading={index === 0 ? 'eager' : 'lazy'} />
+              </picture>
+            ) : (
+              <Image src={slide.imageUrl} alt={imageAlt} fill className="object-cover" priority={index === 0} />
+            )}
+            {showOverlay && <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />}
 
-            <div className="absolute bottom-12 left-8 max-w-xl md:left-16">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">
-                AGENDA CULTURAL DE GUANAJUATO
-              </p>
-              <h1 className="text-4xl font-extrabold leading-none tracking-tight text-white md:text-6xl">
-                <span className="block not-italic">{firstLine}</span>
-                {secondLine && <span className="block italic">{secondLine}</span>}
-              </h1>
-              <p className="mt-3 max-w-lg text-sm text-white/80 md:text-base">{slide.subtitle}</p>
+            {slide.href && (
+              <Link href={slide.href} className="absolute inset-0 z-10" aria-label={slide.title ?? 'Abrir promoción'}>
+                <span className="sr-only">Abrir promoción</span>
+              </Link>
+            )}
 
-              {slide.ctaLabel && (
-                <Link
-                  href={slide.ctaHref ?? '#'}
-                  className="mt-6 inline-flex rounded-full bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-light"
-                >
-                  {slide.ctaLabel}
-                </Link>
-              )}
-            </div>
+            {hasTextContent && (
+              <div className="absolute bottom-12 left-8 z-20 max-w-xl md:left-16">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">
+                  {isAdSlide ? 'PUBLICIDAD' : 'AGENDA CULTURAL DE GUANAJUATO'}
+                </p>
+                {slide.title && (
+                  <h1 className="text-4xl font-extrabold leading-none tracking-tight text-white md:text-6xl">
+                    <span className="block not-italic">{firstLine}</span>
+                    {secondLine && <span className="block italic">{secondLine}</span>}
+                  </h1>
+                )}
+                {slide.subtitle && (
+                  <p className="mt-3 max-w-lg text-sm text-white/80 md:text-base">{slide.subtitle}</p>
+                )}
+
+                {slide.ctaLabel && (
+                  <Link
+                    href={slide.ctaHref ?? slide.href ?? '#'}
+                    className="mt-6 inline-flex rounded-full bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-light"
+                  >
+                    {slide.ctaLabel}
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         )
       })}
@@ -106,8 +139,12 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
       <button
         type="button"
         aria-label="Slide anterior"
-        onClick={goToPreviousSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          goToPreviousSlide()
+        }}
+        className="absolute left-4 top-1/2 z-30 hidden -translate-y-1/2 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20 md:block"
       >
         <ChevronLeft size={24} />
       </button>
@@ -115,19 +152,23 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
       <button
         type="button"
         aria-label="Slide siguiente"
-        onClick={goToNextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          goToNextSlide()
+        }}
+        className="absolute right-4 top-1/2 z-30 hidden -translate-y-1/2 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20 md:block"
       >
         <ChevronRight size={24} />
       </button>
 
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2">
         {slides.map((slide, index) => {
           const isActive = index === currentIndex
 
           return (
             <button
-              key={`${slide.title}-dot-${index}`}
+              key={`${slide.imageUrl}-dot-${index}`}
               type="button"
               aria-label={`Ir al slide ${index + 1}`}
               onClick={() => setCurrentIndex(index)}

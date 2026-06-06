@@ -28,50 +28,48 @@ export default function VenueMap({
     embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedQuery}`
   }
 
-  return (
-    <div className="space-y-4">
-      <h2 className="font-mono-gk text-sm text-stone uppercase tracking-wide">
-        Cómo llegar
-      </h2>
+  const locationLabel = [address, city].filter(Boolean).join(', ')
 
-      {/* Map or placeholder */}
-      <div className="w-full h-96 rounded-sm bg-pale border border-border overflow-hidden">
-        {apiKey && embedUrl ? (
-          <iframe
-            src={embedUrl}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen={true}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-pale p-6">
-            <p className="text-stone text-center mb-4">{venueName}</p>
-            <a
-              href={mapsSearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-terracota text-cream rounded-sm hover:bg-[#a84e23] transition-colors font-medium text-sm"
-            >
-              Ver en Google Maps →
-            </a>
-          </div>
-        )}
+  return (
+    <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm md:p-8">
+      <div className="mb-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ubicacion</p>
+        <h2 className="mt-2 text-2xl font-bold text-gray-900">Como llegar</h2>
       </div>
 
-      {/* Address text with link */}
-      <div className="flex items-start gap-3">
-        <svg className="w-5 h-5 text-terracota flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-        <div>
-          <p className="text-ink text-sm mb-2">
-            {address}, {city}
-          </p>
+      <div className="overflow-hidden rounded-xl border border-slate-300 bg-brand-bg">
+        <div className="h-96 w-full">
+          {apiKey && embedUrl ? (
+            <iframe
+              src={embedUrl}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center bg-brand-bg p-6 text-center">
+              <p className="text-lg font-semibold text-gray-900">{venueName}</p>
+              <p className="mt-2 max-w-md text-sm text-slate-500">Abre este lugar en Google Maps para obtener la ruta y revisar detalles de acceso.</p>
+              <a
+                href={mapsSearchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-light"
+              >
+                Ver en Google Maps
+              </a>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-300 bg-white px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Direccion</p>
+          <p className="mt-2 text-sm text-gray-900">{locationLabel || 'Direccion disponible proximamente'}</p>
         </div>
       </div>
-    </div>
+    </section>
   )
 }

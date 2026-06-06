@@ -2,6 +2,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { tokenStore } from '@/lib/auth'
 import type { User } from '@/types'
@@ -35,8 +36,15 @@ export default function DashboardLayout({ children, user }: Props) {
       <nav className="sticky top-0 z-50 bg-brand-navy border-b border-white/10">
         <div className="flex items-center px-6 py-3 h-[72px] max-w-full w-full">
           {/* Logo: always left */}
-          <Link href="/" className="font-extrabold tracking-tight text-xl text-white">
-            GUANA GO!
+          <Link href="/" aria-label="Inicio" className="inline-flex leading-none">
+            <Image
+              src="/ICON/SVG/logo-icon-mob.svg"
+              alt="Guana Gou"
+              width={168}
+              height={64}
+              className="h-10 w-auto"
+              priority
+            />
           </Link>
 
           {/* Tabs: next to logo (or centered by layout) */}

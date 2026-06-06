@@ -6,7 +6,7 @@ import { useState } from 'react'
 import type { Event, EventCategory, EventListItem, VenueListItem, EventFilters } from '@/types'
 import EventCard from '@/components/events/EventCard'
 import EventModal from '@/components/events/EventModal'
-import HeroCarousel from '@/components/sections/HeroCarousel'
+import HeroCarousel, { type HeroSlide } from '@/components/sections/HeroCarousel'
 import FilterModal from '@/components/events/FilterModal'
 import { events as eventsApi } from '@/lib/api'
 import Link from 'next/link'
@@ -155,7 +155,16 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
     })
   }
 
-  const heroSlides = [...featuredEvents, ...recentEvents]
+  const promoHeroSlide: HeroSlide = {
+    kind: 'ad',
+    imageUrl: '/FULLSCREEN/Home1.png',
+    mobileImageUrl: '/MOBILE/Home-m.png',
+    imageAlt: 'Promoción destacada de Guana',
+    href: '#eventos',
+    showOverlay: false,
+  }
+
+  const eventHeroSlides: HeroSlide[] = [...featuredEvents, ...recentEvents]
     .filter((event, index, allEvents) => {
       if (!event.image) {
         return false
@@ -165,6 +174,7 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
     })
     .slice(0, 5)
     .map((event) => ({
+      kind: 'event' as const,
       title: `${event.title}\nGuanajuato, MX`,
       subtitle: `Descubre este evento en ${event.venue_name}`,
       imageUrl: event.image ?? '/hero-fallback.svg',
@@ -172,22 +182,40 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
       ctaHref: `/eventos/${event.slug}`,
     }))
 
-  const resolvedHeroSlides =
-    heroSlides.length > 0
-      ? heroSlides
+  const resolvedHeroSlides: HeroSlide[] = [
+    promoHeroSlide,
+    ...(eventHeroSlides.length > 0
+      ? eventHeroSlides
       : [
           {
+            kind: 'event' as const,
             title: 'Lo que pasa\nen Gto.',
             subtitle: 'Descubre experiencias culturales destacadas en Guanajuato.',
             imageUrl: '/hero-fallback.svg',
             ctaLabel: 'Explorar eventos',
             ctaHref: '#eventos',
           },
-        ]
+        ]),
+  ]
 
   return (
     <main className="bg-white">
+      
       <HeroCarousel slides={resolvedHeroSlides} />
+
+      <section aria-label="Subtexto promocional" className="bg-white px-6 pt-6 md:px-10 md:pt-8">
+        <div className="mx-auto max-w-6xl">
+          <picture>
+            <source media="(max-width: 767px)" srcSet="/MOBILE/Subtext-m.png" />
+            <img
+              src="/FULLSCREEN/Subtext.png"
+              alt="Subtexto promocional de Guana"
+              className="h-auto w-full"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+      </section>
 
       {/* ── Eventos grid ── */}
       <section id="eventos" className="px-6 md:px-10 py-10 border-t border-border">

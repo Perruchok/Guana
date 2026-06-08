@@ -2,7 +2,7 @@
 // app/(public)/HomeClient.tsx
 // Handles all interactivity: slider, filter modal, event modal.
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Event, EventCategory, EventListItem, VenueListItem, EventFilters } from '@/types'
 import EventCard from '@/components/events/EventCard'
 import EventModal from '@/components/events/EventModal'
@@ -52,6 +52,7 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
   const [filteredEvents, setFilteredEvents] = useState<EventListItem[]>(sortEventsBySoonest(recentEvents))
   const [loadingEvents, setLoadingEvents]   = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const pendingDetailEventIdRef = useRef<string | null>(null)
 
   const toModalEvent = (event: EventListItem): Event => ({
     ...(event as EventListItem & { description?: string; end_datetime?: string }),
@@ -86,11 +87,28 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
   const handleOpenEventModal = async (event: EventListItem) => {
     // Open instantly with list data, then hydrate with full detail (description, etc.)
     setSelectedEvent(toModalEvent(event))
+
+    // When list payload already includes description, no extra round-trip is required.
+    if (event.description?.trim()) {
+      pendingDetailEventIdRef.current = null
+      return
+    }
+
+    pendingDetailEventIdRef.current = event.id
     try {
       const detailedEvent = await eventsApi.get(event.id)
-      setSelectedEvent(detailedEvent)
+      setSelectedEvent((current) => {
+        if (!current || current.id !== event.id || pendingDetailEventIdRef.current !== event.id) {
+          return current
+        }
+        return detailedEvent
+      })
     } catch {
       // Keep fallback list data if detail fetch fails
+    } finally {
+      if (pendingDetailEventIdRef.current === event.id) {
+        pendingDetailEventIdRef.current = null
+      }
     }
   }
 
@@ -392,7 +410,10 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
 
       <EventModal
         event={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={() => {
+          pendingDetailEventIdRef.current = null
+          setSelectedEvent(null)
+        }}
       />
     </main>
   )

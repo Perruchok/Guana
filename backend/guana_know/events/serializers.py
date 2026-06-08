@@ -109,6 +109,7 @@ class EventListSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'slug',
+            'description',
             'category',
             'status',
             'image',

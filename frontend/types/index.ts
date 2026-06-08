@@ -151,6 +151,7 @@ export interface EventListItem {
   id: string
   title: string
   slug: string
+  description: string
   category: EventCategory
   image: string | null
   start_datetime: string

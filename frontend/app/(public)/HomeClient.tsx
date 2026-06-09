@@ -10,7 +10,7 @@ import HeroCarousel, { type HeroSlide } from '@/components/sections/HeroCarousel
 import FilterModal from '@/components/events/FilterModal'
 import { events as eventsApi } from '@/lib/api'
 import Link from 'next/link'
-import { EVENT_CATEGORY_LABELS, VENUE_CATEGORY_LABELS } from '@/lib/utils'
+import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
 
 interface Props {
   featuredEvents: EventListItem[]
@@ -221,7 +221,7 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
       
       <HeroCarousel slides={resolvedHeroSlides} />
 
-      <section aria-label="Subtexto promocional" className="bg-white px-6 pt-6 md:px-10 md:pt-8">
+      <section aria-label="Subtexto promocional" className="mt-3 bg-white px-6 pt-6 md:mt-4 md:px-10 md:pt-8">
         <div className="mx-auto max-w-6xl">
           <picture>
             <source media="(max-width: 767px)" srcSet="/MOBILE/Subtext-m.png" />
@@ -239,9 +239,8 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
       <section id="eventos" className="px-6 md:px-10 py-10 border-t border-border">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <p className="label mb-1">Agenda</p>
-            <h2 className="font-display font-bold text-2xl tracking-tight">Eventos</h2>
-            <div className="w-10 h-0.5 bg-terracota mt-2" />
+            {/* <p className="label mb-1">Agenda</p>
+            <h2 className="font-display font-bold text-2xl tracking-tight">Eventos</h2> */}
           </div>
         </div>
 
@@ -329,76 +328,34 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
         )}
       </section>
 
-      {/* ── Directorio preview ── */}
-      {featuredVenues.length > 0 && (
-        <section id="directorio" className="border-t border-slate-300 bg-brand-bg px-6 py-12 md:px-10">
-          <div className="mx-auto max-w-6xl border-t border-slate-300 pt-6">
-            <h2 className="text-center text-4xl font-extrabold uppercase italic tracking-tight text-brand-blue">
-              Directorio
-            </h2>
-            <p className="mx-auto mt-2 max-w-3xl text-center text-sm leading-tight text-slate-500">
-              Compilamos cuidadosamente los servicios que Guanajuato capital tiene para ofrecerte.
-              <span className="font-semibold italic text-slate-700"> Entretenimiento, Emergencias, Asistencia, Educación, Asociaciones, Dependencias y Comercios.</span>
-            </p>
-          </div>
+      {/* ── Home banners ── */}
+      <section id="directorio" className="border-t border-slate-300 bg-brand-bg px-6 py-10 md:px-10 md:py-12">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 md:gap-6">
+          <Link href="/cartelera" aria-label="Ir a cartelera" className="block overflow-hidden rounded-2xl border border-slate-300 bg-white">
+            <picture>
+              <source media="(max-width: 767px)" srcSet="/MOBILE/Banner1-m.png" />
+              <img
+                src="/FULLSCREEN/Banner1.png"
+                alt="Explora la cartelera de Guana"
+                className="h-auto w-full"
+                loading="lazy"
+              />
+            </picture>
+          </Link>
 
-          <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredVenues.slice(0, 3).map((venue) => (
-              <Link
-                key={venue.id}
-                href={`/lugares/${venue.slug}`}
-                className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-slate-300 bg-white"
-              >
-                {venue.image ? (
-                  <img
-                    src={venue.image}
-                    alt={venue.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-200">
-                    <span className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      Sin imagen
-                    </span>
-                  </div>
-                )}
-
-                <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                  <span className="h-2.5 w-2.5 rounded-full bg-brand-blue" aria-hidden="true" />
-                  <span>{VENUE_CATEGORY_LABELS[venue.category]}</span>
-                </div>
-
-                <div className="absolute inset-x-3 bottom-3 flex items-center gap-2">
-                  <div className="min-w-0 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                    <span className="block truncate">{venue.name}</span>
-                  </div>
-                  <span className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand-blue">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
-                  </span>
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand-blue">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-6 text-center">
-            <Link
-              href="/directorio"
-              className="text-xl font-extrabold uppercase italic tracking-tight text-brand-blue transition-colors hover:text-brand-blue-light"
-            >
-              Ver más ›
-            </Link>
-          </div>
-        </section>
-      )}
+          <Link href="/directorio" aria-label="Ir a directorio" className="block overflow-hidden rounded-2xl border border-slate-300 bg-white">
+            <picture>
+              <source media="(max-width: 767px)" srcSet="/MOBILE/Banner2-m.png" />
+              <img
+                src="/FULLSCREEN/Banner2.png"
+                alt="Explora el directorio de Guana"
+                className="h-auto w-full"
+                loading="lazy"
+              />
+            </picture>
+          </Link>
+        </div>
+      </section>
 
       {/* ── Modals ── */}
       <FilterModal

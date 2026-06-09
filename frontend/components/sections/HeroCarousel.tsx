@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -41,6 +41,10 @@ function splitTitle(title?: string): { firstLine: string; secondLine: string | n
 export default function HeroCarousel({ slides }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
+  const [dragOffset, setDragOffset] = useState(0)
+  const touchStartXRef = useRef<number | null>(null)
+  const touchStartYRef = useRef<number | null>(null)
+  const suppressTapRef = useRef(false)
 
   useEffect(() => {
     if (slides.length <= 1 || isHovered) {
@@ -68,11 +72,98 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
     setCurrentIndex((previousIndex) => (previousIndex + 1) % slides.length)
   }
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0]
+
+    touchStartXRef.current = touch.clientX
+    touchStartYRef.current = touch.clientY
+    setDragOffset(0)
+    suppressTapRef.current = false
+  }
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    const touchStartX = touchStartXRef.current
+    const touchStartY = touchStartYRef.current
+    const touch = event.touches[0]
+
+    if (touchStartX === null || touchStartY === null) {
+      return
+    }
+
+    const deltaX = touch.clientX - touchStartX
+    const deltaY = touch.clientY - touchStartY
+
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+      setDragOffset(0)
+      return
+    }
+
+    setDragOffset(Math.max(-120, Math.min(120, deltaX * 0.35)))
+
+    if (Math.abs(deltaX) > 12) {
+      suppressTapRef.current = true
+    }
+  }
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    const touchStartX = touchStartXRef.current
+    const touchStartY = touchStartYRef.current
+    const touch = event.changedTouches[0]
+
+    touchStartXRef.current = null
+    touchStartYRef.current = null
+    setDragOffset(0)
+
+    if (touchStartX === null || touchStartY === null) {
+      return
+    }
+
+    const deltaX = touch.clientX - touchStartX
+    const deltaY = touch.clientY - touchStartY
+    const isHorizontalSwipe = Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)
+
+    if (!isHorizontalSwipe) {
+      return
+    }
+
+    suppressTapRef.current = true
+
+    if (deltaX > 0) {
+      goToPreviousSlide()
+      return
+    }
+
+    goToNextSlide()
+  }
+
+  const handleTouchCancel = () => {
+    touchStartXRef.current = null
+    touchStartYRef.current = null
+    setDragOffset(0)
+    suppressTapRef.current = false
+  }
+
+  const handleClickCapture = (event: React.MouseEvent<HTMLElement>) => {
+    if (!suppressTapRef.current) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+    suppressTapRef.current = false
+  }
+
   return (
     <section
       className="relative mx-6 mt-6 aspect-square w-auto overflow-hidden rounded-3xl md:mx-10 md:h-[600px] md:aspect-auto"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      onClickCapture={handleClickCapture}
+      style={{ touchAction: 'pan-y' }}
     >
       {slides.map((slide, index) => {
         const { firstLine, secondLine } = splitTitle(slide.title)
@@ -86,10 +177,13 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
         return (
           <div
             key={`${slide.imageUrl}-${index}`}
-            className={`absolute inset-0 transition-opacity duration-500 ${
+            className={`absolute inset-0 ${
+              isActive ? 'transition-transform duration-200 ease-out transition-opacity duration-500' : 'transition-opacity duration-500'
+            } ${
               isActive ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
             aria-hidden={!isActive}
+            style={isActive ? { transform: `translateX(${dragOffset}px)` } : undefined}
           >
             {slide.mobileImageUrl ? (
               <picture>

@@ -23,18 +23,34 @@ export default function Navbar() {
       return pathname === '/'
     }
 
+    if (href === '/cartelera') {
+      return (
+        pathname === '/cartelera'
+        || pathname.startsWith('/cartelera/')
+        || pathname.startsWith('/eventos/')
+      )
+    }
+
+    if (href === '/directorio') {
+      return (
+        pathname === '/directorio'
+        || pathname.startsWith('/directorio/')
+        || pathname.startsWith('/lugares/')
+      )
+    }
+
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 
   const getNavLinkClassName = (href: string): string => {
     const baseClassName =
-      'px-1 py-2 text-sm font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-gray-900 border-b-2 border-transparent'
+      'px-1 py-2 text-sm font-semibold uppercase tracking-wide transition-colors border-b-2'
 
     if (isActiveLink(href)) {
       return `${baseClassName} border-brand-blue text-brand-blue`
     }
 
-    return baseClassName
+    return `${baseClassName} border-transparent text-slate-500 hover:text-brand-blue`
   }
 
   const handleProfileClick = (): void => {

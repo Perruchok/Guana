@@ -1,5 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/react'
 import './globals.css'
 import RemoveUndefinedStyle from './RemoveUndefinedStyle.client'
 
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className="bg-brand-bg text-gray-900 font-sans antialiased">
         <RemoveUndefinedStyle />
         {children}
+        <Analytics />
       </body>
     </html>
   )

@@ -113,9 +113,19 @@ export const events = {
   get: (id: string) =>
     apiFetch<Event>(`/events/${id}/`),
 
-  /** GET /events/?search=slug (slug lookup — adjust if backend adds slug endpoint) */
-  getBySlug: (slug: string) =>
-    apiFetch<PaginatedResponse<Event>>(`/events/?search=${slug}`),
+  /** GET /events/?slug={slug} */
+  getBySlug: async (slug: string, fetchOptions: RequestInit = {}) => {
+    const res = await apiFetch<PaginatedResponse<EventListItem>>(
+      `/events/?slug=${encodeURIComponent(slug)}`,
+      { ...fetchOptions }
+    )
+
+    if (!res.results || res.results.length === 0) {
+      return null
+    }
+
+    return res.results[0]
+  },
 
   /** POST /events/ — auth required */
   create: (token: string, data: Partial<Event>) =>

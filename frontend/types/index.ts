@@ -180,6 +180,7 @@ export interface ApiError {
 // ── Filter/query params ───────────────────────
 
 export interface EventFilters {
+  slug?: string
   category?: EventCategory
   is_featured?: boolean
   is_free?: boolean

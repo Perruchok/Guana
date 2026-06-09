@@ -1,4 +1,5 @@
 // components/events/EventCard.tsx
+import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin } from 'lucide-react'
 import CategoryBadge from '@/components/ui/CategoryBadge'
@@ -13,7 +14,8 @@ interface EventCardProps {
   slug: string
   isFree: boolean
   price: number
-  onClick: () => void
+  href?: string
+  onClick?: () => void
 }
 
 const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -48,56 +50,71 @@ export default function EventCard({
   slug,
   isFree,
   price,
+  href,
   onClick,
 }: EventCardProps) {
   const { day, month } = getDateParts(startDatetime)
   const priceLabel = isFree ? 'Gratis' : `MXN ${price.toLocaleString('es-MX')}`
+  const cardClassName = 'block h-full cursor-pointer overflow-hidden rounded-xl bg-brand-dark transition-transform duration-200 hover:scale-[1.02]'
+  const cardContent = (
+    <>
+      <div className="relative aspect-video bg-gray-800">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="h-full w-full bg-gray-800" aria-hidden="true" />
+        )}
+
+        <div className="absolute left-3 top-3">
+          <CategoryBadge category={category} />
+        </div>
+
+        <div className="absolute bottom-3 left-3 rounded bg-slate-800/80 px-2 py-1 text-white backdrop-blur">
+          <div className="text-lg font-bold leading-none">{day}</div>
+          <div className="text-xs uppercase leading-none">{month}</div>
+        </div>
+      </div>
+
+      <div className="p-3">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-white">{title}</h3>
+
+        <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
+          <MapPin size={12} aria-hidden="true" />
+          <span className="truncate">{venueName}</span>
+        </p>
+
+        <div className="mt-3 flex items-center justify-between">
+          <span className={`text-sm font-semibold ${isFree ? 'text-green-400' : 'text-white'}`}>
+            {priceLabel}
+          </span>
+          <span className="text-xs text-brand-blue-light transition-colors hover:text-brand-blue">Ver mas »</span>
+        </div>
+      </div>
+    </>
+  )
+
+  if (href) {
+    return (
+      <Link id={id} href={href} aria-label={`Ver evento ${title}`} className={cardClassName}>
+        {cardContent}
+      </Link>
+    )
+  }
 
   return (
     <article
       id={id}
       onClick={onClick}
       aria-label={`Ver evento ${title}`}
-      className="block rounded-xl bg-brand-dark overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer h-full"
+      className={cardClassName}
     >
-        <div className="relative aspect-video bg-gray-800">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            />
-          ) : (
-            <div className="h-full w-full bg-gray-800" aria-hidden="true" />
-          )}
-
-          <div className="absolute left-3 top-3">
-            <CategoryBadge category={category} />
-          </div>
-
-          <div className="absolute bottom-3 left-3 rounded bg-slate-800/80 px-2 py-1 text-white backdrop-blur">
-            <div className="text-lg font-bold leading-none">{day}</div>
-            <div className="text-xs uppercase leading-none">{month}</div>
-          </div>
-        </div>
-
-        <div className="p-3">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-white">{title}</h3>
-
-          <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
-            <MapPin size={12} aria-hidden="true" />
-            <span className="truncate">{venueName}</span>
-          </p>
-
-          <div className="mt-3 flex items-center justify-between">
-            <span className={`text-sm font-semibold ${isFree ? 'text-green-400' : 'text-white'}`}>
-              {priceLabel}
-            </span>
-            <span className="text-xs text-brand-blue-light transition-colors hover:text-brand-blue">Ver mas »</span>
-          </div>
-        </div>
+      {cardContent}
     </article>
   )
 }

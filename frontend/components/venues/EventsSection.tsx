@@ -33,7 +33,7 @@ export default function EventsSection({ events }: EventsSectionProps) {
                   slug={event.slug}
                   isFree={event.is_free}
                   price={event.price}
-                  onClick={() => {}}
+                  href={`/eventos/${event.slug}`}
                 />
               </div>
             ))}

@@ -122,7 +122,7 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
               slug={event.slug}
               isFree={event.isFree}
               price={event.price}
-              onClick={() => {}}
+              href={`/eventos/${event.slug}`}
             />
           ))}
         </div>

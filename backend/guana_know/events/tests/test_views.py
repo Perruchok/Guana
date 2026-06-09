@@ -61,6 +61,17 @@ class TestEventViews:
         assert str(e1.id) in ids
         assert str(e2.id) not in ids
 
+    def test_slug_filter_returns_exact_event(self, api_client):
+        matching_event = EventFactory(status='published', slug='tardes-de-soledad')
+        EventFactory(status='published', slug='otro-evento')
+
+        resp = api_client.get('/api/events/?slug=tardes-de-soledad')
+
+        assert resp.status_code == 200
+        data = resp.json()
+        ids = [str(ev['id']) for ev in data['results']]
+        assert ids == [str(matching_event.id)]
+
     def test_post_unauthenticated_returns_401(self, api_client):
         resp = api_client.post('/api/events/', {}, format='json')
         assert resp.status_code == 401

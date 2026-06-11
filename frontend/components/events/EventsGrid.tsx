@@ -2,17 +2,39 @@
 
 import { useState } from 'react'
 import EventCard from '@/components/events/EventCard'
+import FilterModal from '@/components/events/FilterModal'
+import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
+import type { EventCategory, EventFilters } from '@/types'
 
 export interface Event {
   id: string
   title: string
-  category: string
+  category: EventCategory
   startDatetime: string
   venueName: string
   imageUrl: string | null
   slug: string
   isFree: boolean
   price: number
+}
+
+type EventUiFilters = EventFilters & {
+  categories?: EventCategory[]
+}
+
+const FILTER_DOT_CLASSES: Record<EventCategory, string> = {
+  music: 'bg-blue-600',
+  performance: 'bg-rose-600',
+  cinema: 'bg-red-600',
+  workshop: 'bg-teal-600',
+  exhibition: 'bg-violet-600',
+  dance: 'bg-pink-600',
+  art: 'bg-orange-500',
+  literature: 'bg-amber-600',
+  festival: 'bg-green-600',
+  conference: 'bg-indigo-600',
+  theater: 'bg-brand-slate',
+  other: 'bg-brand-slate',
 }
 
 interface EventsGridProps {
@@ -22,9 +44,13 @@ interface EventsGridProps {
 
 export default function EventsGrid({ events, isLoading }: EventsGridProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeFilters, setActiveFilters] = useState<string[]>([])
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<EventUiFilters>({})
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
+  const selectedCategories =
+    activeFilters.categories ?? (activeFilters.category ? [activeFilters.category] : [])
+
   const visibleEvents = events.filter((event) => {
     const matchesSearch =
       normalizedQuery.length === 0 ||
@@ -33,17 +59,28 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
       event.category.toLowerCase().includes(normalizedQuery)
 
     const matchesFilters =
-      activeFilters.length === 0 ||
-      activeFilters.some((filterValue) => filterValue.toLowerCase() === event.category.toLowerCase())
+      selectedCategories.length === 0 ||
+      selectedCategories.includes(event.category)
 
-    return matchesSearch && matchesFilters
+    const matchesFree = activeFilters.is_free ? event.isFree : true
+
+    return matchesSearch && matchesFilters && matchesFree
   })
 
-  const removeFilter = (filterToRemove: string) => {
-    setActiveFilters((currentFilters) =>
-      currentFilters.filter((filterValue) => filterValue !== filterToRemove)
-    )
+  const handleApplyFilters = (filters: EventUiFilters) => {
+    setActiveFilters(filters)
   }
+
+  const removeCategoryFilter = (filterToRemove: EventCategory) => {
+    const remainingCategories = selectedCategories.filter((filterValue) => filterValue !== filterToRemove)
+    setActiveFilters((currentFilters) => ({
+      ...currentFilters,
+      category: undefined,
+      categories: remainingCategories.length > 0 ? remainingCategories : undefined,
+    }))
+  }
+
+  const activeFilterCount = selectedCategories.length + (activeFilters.is_free ? 1 : 0)
 
   return (
     <section>
@@ -53,6 +90,7 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
           <button
             type="button"
+            onClick={() => setFilterOpen(true)}
             className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-blue-light"
           >
             Filtrar por
@@ -61,29 +99,41 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
             </svg>
           </button>
 
-          {activeFilters.length > 0 && (
+          {activeFilterCount > 0 && (
             <>
               <button
                 type="button"
-                onClick={() => setActiveFilters([])}
+                onClick={() => setActiveFilters({ category: undefined, categories: undefined, is_free: undefined })}
                 className="text-xs font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-gray-700"
               >
                 Borrar filtros:
               </button>
 
               <div className="flex flex-wrap gap-2">
-                {activeFilters.map((filterValue) => (
+                {selectedCategories.map((filterValue) => (
                   <button
                     key={filterValue}
                     type="button"
-                    onClick={() => removeFilter(filterValue)}
+                    onClick={() => removeCategoryFilter(filterValue)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:border-slate-400 hover:text-gray-700"
                   >
-                    <span className="h-3 w-3 rounded-full bg-brand-blue" aria-hidden="true" />
-                    <span>{filterValue}</span>
+                    <span className={`h-3 w-3 rounded-full ${FILTER_DOT_CLASSES[filterValue]}`} aria-hidden="true" />
+                    <span>{EVENT_CATEGORY_LABELS[filterValue]}</span>
                     <span aria-hidden="true">×</span>
                   </button>
                 ))}
+
+                {activeFilters.is_free && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilters((currentFilters) => ({ ...currentFilters, is_free: undefined }))}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:border-slate-400 hover:text-gray-700"
+                  >
+                    <span className="h-3 w-3 rounded-full bg-brand-yellow" aria-hidden="true" />
+                    <span>Gratis</span>
+                    <span aria-hidden="true">×</span>
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -97,6 +147,13 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
           />
         </div>
       </div>
+
+      <FilterModal
+        open={filterOpen}
+        current={activeFilters}
+        onApply={handleApplyFilters}
+        onClose={() => setFilterOpen(false)}
+      />
 
       {isLoading ? (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

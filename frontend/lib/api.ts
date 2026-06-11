@@ -33,7 +33,12 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`${BASE}${path}`, { ...rest, headers })
+  const cacheOptions =
+    rest.cache === undefined && rest.next?.revalidate === undefined
+      ? { cache: 'no-store' as const }
+      : {}
+
+  const res = await fetch(`${BASE}${path}`, { ...cacheOptions, ...rest, headers })
 
   if (!res.ok) {
     const error: ApiError = await res.json().catch(() => ({ detail: 'Error desconocido' }))
@@ -104,14 +109,15 @@ export const events = {
     ),
 
   /** GET /events/featured — convenience: featured + upcoming */
-  featured: () =>
+  featured: (fetchOptions: RequestInit = {}) =>
     apiFetch<PaginatedResponse<EventListItem>>(
-      `/events/?is_featured=true&ordering=-is_featured,start_datetime`
+      `/events/?is_featured=true&ordering=-is_featured,start_datetime`,
+      fetchOptions
     ),
 
   /** GET /events/{id}/ */
-  get: (id: string) =>
-    apiFetch<Event>(`/events/${id}/`),
+  get: (id: string, fetchOptions: RequestInit = {}) =>
+    apiFetch<Event>(`/events/${id}/`, fetchOptions),
 
   /** GET /events/?slug={slug} */
   getBySlug: async (slug: string, fetchOptions: RequestInit = {}) => {
@@ -163,15 +169,15 @@ export const venues = {
       return res.results[0];
     },
   /** GET /venues/ — public list or authenticated for owner filtering */
-  list: (filters: VenueFilters = {}, token?: string | null) =>
+  list: (filters: VenueFilters = {}, token?: string | null, fetchOptions: RequestInit = {}) =>
     apiFetch<PaginatedResponse<VenueListItem>>(
       `/venues/${toQueryString(filters as Record<string, unknown>)}`,
-      { token }
+      { token, ...fetchOptions }
     ),
 
   /** GET /venues/{id}/ */
-  get: (id: string) =>
-    apiFetch<Venue>(`/venues/${id}/`),
+  get: (id: string, fetchOptions: RequestInit = {}) =>
+    apiFetch<Venue>(`/venues/${id}/`, fetchOptions),
 
   /** GET /venues/me/ — authenticated user's venues (array) */
   me: (token: string) =>

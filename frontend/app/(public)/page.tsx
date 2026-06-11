@@ -16,11 +16,13 @@ export const metadata = {
 
 async function getInitialData() {
   try {
+    const homeRevalidate = { next: { revalidate: 300 } }
+
     // Obtener eventos destacados y recientes
     const eventsRes = await Promise.all([
-      events.featured().catch(() => ({ results: [] })),
-      events.list({ ordering: 'start_datetime' }).catch(() => ({ results: [] })),
-      venues.list({ is_featured: true }).catch(() => ({ results: [] })),
+      events.featured(homeRevalidate).catch(() => ({ results: [] })),
+      events.list({ ordering: 'start_datetime' }, null, homeRevalidate).catch(() => ({ results: [] })),
+      venues.list({ is_featured: true }, null, homeRevalidate).catch(() => ({ results: [] })),
     ])
     
     const featured = (eventsRes[0] as any).results as EventListItem[]

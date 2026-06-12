@@ -173,13 +173,25 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
     })
   }
 
-  const promoHeroSlide: HeroSlide = {
+  const presentationHeroSlide: HeroSlide = {
     kind: 'ad',
     imageUrl: '/FULLSCREEN/Home1.png',
     mobileImageUrl: '/MOBILE/Home-m.png',
     imageAlt: 'Promoción destacada de Guana',
     href: '#eventos',
     showOverlay: false,
+  }
+
+  const advertisementHeroSlide: HeroSlide = {
+    kind: 'ad',
+    imageUrl: '/FULLSCREEN/Home1.png',
+    mobileImageUrl: '/MOBILE/Home-m.png',
+    imageAlt: 'Anuncio para promocionar tu espacio en Guana Go',
+    title: 'Te gustaria aparecer\nen esta seccion?',
+    subtitle: 'Promociona tu evento o espacio cultural en el hero principal.',
+    ctaLabel: 'Contactanos',
+    ctaHref: 'https://wa.me/524613409554',
+    showOverlay: true,
   }
 
   const eventHeroSlides: HeroSlide[] = [...featuredEvents, ...recentEvents]
@@ -190,7 +202,7 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
 
       return allEvents.findIndex((candidateEvent) => candidateEvent.id === event.id) === index
     })
-    .slice(0, 5)
+    .slice(0, 4)
     .map((event) => ({
       kind: 'event' as const,
       title: `${event.title}\nGuanajuato, MX`,
@@ -200,20 +212,19 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
       ctaHref: `/eventos/${event.slug}`,
     }))
 
+  const fallbackEventSlide: HeroSlide = {
+    kind: 'event',
+    title: 'Lo que pasa\nen Gto.',
+    subtitle: 'Descubre experiencias culturales destacadas en Guanajuato.',
+    imageUrl: '/hero-fallback.svg',
+    ctaLabel: 'Explorar eventos',
+    ctaHref: '#eventos',
+  }
+
   const resolvedHeroSlides: HeroSlide[] = [
-    promoHeroSlide,
-    ...(eventHeroSlides.length > 0
-      ? eventHeroSlides
-      : [
-          {
-            kind: 'event' as const,
-            title: 'Lo que pasa\nen Gto.',
-            subtitle: 'Descubre experiencias culturales destacadas en Guanajuato.',
-            imageUrl: '/hero-fallback.svg',
-            ctaLabel: 'Explorar eventos',
-            ctaHref: '#eventos',
-          },
-        ]),
+    presentationHeroSlide,
+    advertisementHeroSlide,
+    ...(eventHeroSlides.length > 0 ? eventHeroSlides : [fallbackEventSlide]),
   ]
 
   return (

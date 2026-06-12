@@ -32,7 +32,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="https://www.instagram.com"
+              href="https://www.instagram.com/guanagoo/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
@@ -46,7 +46,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="https://wa.me/527282843125"
+              href="https://wa.me/524613409554"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
@@ -89,7 +89,7 @@ export default function Footer() {
           <a href="mailto:contacto@guanago.mx" className="text-sm text-slate-300 hover:text-white">
             contacto@guanago.mx
           </a>
-          <p className="mt-3 text-sm text-slate-300">Tel. 728 284 3125</p>
+          <p className="mt-3 text-sm text-slate-300">Tel. 461 340 9554</p>
           <p className="text-sm text-slate-400">Ext. 159</p>
           <p className="mt-2 text-xs text-slate-400">Lunes a Viernes de 9:00 am a 6:00 pm</p>
           <p className="text-xs text-slate-500">*Excepto días festivos</p>

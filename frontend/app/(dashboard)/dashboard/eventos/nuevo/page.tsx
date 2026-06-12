@@ -6,13 +6,15 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { events, venues, uploads } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
-import { EVENT_CATEGORY_LABELS, VENUE_CATEGORY_LABELS } from '@/lib/utils'
+import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
 import ImageUploader from '@/components/ui/ImageUploader'
 import type { EventCategory, Venue, Event } from '@/types'
+import QuickCreateVenueModal from '@/components/events/QuickCreateVenueModal'
 
 export default function NuevoEventoPage() {
   const router = useRouter()
-  const token = tokenStore.getAccess()
+  const [token, setToken] = useState<string | null>(null)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   const [userVenues, setUserVenues] = useState<Venue[]>([])
   const [form, setForm] = useState({
@@ -21,7 +23,6 @@ export default function NuevoEventoPage() {
     category: 'music' as EventCategory,
     venue: '',
     start_datetime: '',
-    end_datetime: '',
     is_free: true,
     price: 0,
     capacity: '',
@@ -34,11 +35,20 @@ export default function NuevoEventoPage() {
   const [loading, setLoading] = useState(false)
   const [venuesLoading, setVenuesLoading] = useState(true)
   const [pendingImage, setPendingImage] = useState<File | null>(null)
+  const [isQuickCreateVenueOpen, setIsQuickCreateVenueOpen] = useState(false)
+
+  useEffect(() => {
+    setToken(tokenStore.getAccess())
+    setIsHydrated(true)
+  }, [])
 
   // Fetch user's venues
   useEffect(() => {
     const fetchVenues = async () => {
-      if (!token) return
+      if (!token) {
+        setVenuesLoading(false)
+        return
+      }
       try {
         const result = await venues.list({}, token)
         setUserVenues(result.results as Venue[])
@@ -54,6 +64,13 @@ export default function NuevoEventoPage() {
     fetchVenues()
   }, [token])
 
+  useEffect(() => {
+    if (!isHydrated) return
+    if (!token) {
+      router.replace('/entrar')
+    }
+  }, [isHydrated, token, router])
+
   const generateSlug = (text: string) => {
     return text
       .toLowerCase()
@@ -67,6 +84,12 @@ export default function NuevoEventoPage() {
     const value = e.target.value
     setForm({ ...form, title: value })
     setSlug(generateSlug(value))
+  }
+
+  const handleVenueCreated = (venue: Venue) => {
+    setUserVenues((current) => [venue, ...current.filter((item) => item.id !== venue.id)])
+    setForm((prev) => ({ ...prev, venue: venue.id }))
+    setIsQuickCreateVenueOpen(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,7 +126,13 @@ export default function NuevoEventoPage() {
     ([key, label]) => ({ id: key as EventCategory, label })
   )
 
-  if (!token) return null
+  if (!isHydrated) {
+    return <div className="max-w-2xl" />
+  }
+
+  if (!token) {
+    return <div className="max-w-2xl" />
+  }
 
   return (
     <div className="max-w-2xl">
@@ -161,17 +190,32 @@ export default function NuevoEventoPage() {
         {venuesLoading ? (
           <div className="text-slate-500">Cargando tus lugares...</div>
         ) : userVenues.length === 0 ? (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-sm">
-            <p className="mb-2">Primero debes crear tu lugar.</p>
-            <Link href="/dashboard/onboarding" className="text-amber-600 hover:underline font-medium">
-              Crear lugar →
-            </Link>
+          <div className="bg-slate-50 border border-slate-200 text-slate-700 text-sm px-4 py-4 rounded-sm space-y-3">
+            <p>No tienes lugares registrados todavía.</p>
+            <button
+              type="button"
+              onClick={() => setIsQuickCreateVenueOpen(true)}
+              className="inline-flex items-center gap-2 bg-brand-blue text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-brand-blue-light transition-colors"
+              disabled={loading}
+            >
+              ＋ Crear nuevo espacio
+            </button>
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Lugar donde ocurre el evento
-            </label>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <label className="block text-sm font-medium text-gray-900">
+                Lugar donde ocurre el evento
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsQuickCreateVenueOpen(true)}
+                className="inline-flex items-center gap-2 bg-brand-blue text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-brand-blue-light transition-colors"
+                disabled={loading}
+              >
+                ＋ Crear nuevo espacio
+              </button>
+            </div>
             <select
               value={form.venue}
               onChange={(e) => setForm({ ...form, venue: e.target.value })}
@@ -179,6 +223,9 @@ export default function NuevoEventoPage() {
               disabled={loading}
               required
             >
+              <option value="" disabled>
+                Selecciona un lugar
+              </option>
               {userVenues.map((venue) => (
                 <option key={venue.id} value={venue.id}>
                   {venue.name}
@@ -224,33 +271,18 @@ export default function NuevoEventoPage() {
         </div>
 
         {/* Date/Time */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Fecha y hora de inicio
-            </label>
-            <input
-              required
-              type="datetime-local"
-              value={form.start_datetime}
-              onChange={(e) => setForm({ ...form, start_datetime: e.target.value })}
-              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
-              disabled={loading}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Fecha y hora de término
-            </label>
-            <input
-              required
-              type="datetime-local"
-              value={form.end_datetime}
-              onChange={(e) => setForm({ ...form, end_datetime: e.target.value })}
-              className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
-              disabled={loading}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-2">
+            Fecha y hora de inicio
+          </label>
+          <input
+            required
+            type="datetime-local"
+            value={form.start_datetime}
+            onChange={(e) => setForm({ ...form, start_datetime: e.target.value })}
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-brand-blue"
+            disabled={loading}
+          />
         </div>
 
         {/* Price section */}
@@ -350,7 +382,7 @@ export default function NuevoEventoPage() {
         <div className="flex gap-4 pt-4 border-t border-slate-200">
           <button
             type="submit"
-            disabled={loading || userVenues.length === 0}
+            disabled={loading || !form.venue}
             className="flex-1 bg-brand-blue text-white font-medium py-3 rounded-sm hover:bg-brand-blue-light transition-colors disabled:opacity-50"
           >
             {loading ? 'Publicando...' : 'Publicar evento'}
@@ -363,6 +395,12 @@ export default function NuevoEventoPage() {
           </Link>
         </div>
       </form>
+
+      <QuickCreateVenueModal
+        isOpen={isQuickCreateVenueOpen}
+        onClose={() => setIsQuickCreateVenueOpen(false)}
+        onVenueCreated={handleVenueCreated}
+      />
     </div>
   )
 }

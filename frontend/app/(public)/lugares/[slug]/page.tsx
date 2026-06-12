@@ -14,16 +14,20 @@ import type { Venue, Event } from '@/types'
 
 function getVenueCategoryClasses(category: string) {
   const palette: Record<string, string> = {
-    restaurante: 'bg-brand-blue text-white',
+    restaurant: 'bg-brand-blue text-white',
     bar: 'bg-brand-yellow text-gray-900',
     cafe: 'bg-orange-500 text-white',
-    hotel: 'bg-indigo-600 text-white',
-    galeria: 'bg-violet-600 text-white',
-    museo: 'bg-rose-600 text-white',
-    teatro: 'bg-brand-slate text-white',
-    foro: 'bg-teal-600 text-white',
-    espacio: 'bg-green-600 text-white',
+    hotel_hostel: 'bg-indigo-600 text-white',
+    gallery: 'bg-violet-600 text-white',
+    museum: 'bg-rose-600 text-white',
+    theater: 'bg-brand-slate text-white',
+    cultural_center: 'bg-teal-600 text-white',
+    public_space: 'bg-green-600 text-white',
+    cinema: 'bg-sky-600 text-white',
+    library: 'bg-emerald-700 text-white',
+    market: 'bg-fuchsia-700 text-white',
     otro: 'bg-brand-slate text-white',
+    other: 'bg-brand-slate text-white',
   }
 
   return palette[category.toLowerCase()] ?? 'bg-brand-slate text-white'

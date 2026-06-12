@@ -1,4 +1,5 @@
 import pytest
+from dateutil.parser import isoparse
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -93,6 +94,25 @@ class TestEventViews:
         data = resp.json()
         assert str(data['owner']) == str(user.id)
         assert str(data['venue']) == str(venue.id)
+
+    def test_post_authenticated_without_end_datetime_defaults_duration(self, auth_client, user):
+        venue = VenueFactory(owner=user)
+        payload = {
+            'title': 'Sin hora final',
+            'slug': 'sin-hora-final',
+            'description': 'desc',
+            'category': 'exhibition',
+            'venue': venue.id,
+            'start_datetime': '2030-01-01T10:00:00Z',
+            'status': 'published',
+        }
+        resp = auth_client.post('/api/events/', payload, format='json')
+        assert resp.status_code == 201
+        data = resp.json()
+        start = isoparse(data['start_datetime'])
+        end = isoparse(data['end_datetime'])
+        assert end > start
+        assert (end - start).total_seconds() == 2 * 60 * 60
 
     def test_put_owner_can_update(self, auth_client, user):
         ev = EventFactory(owner=user)

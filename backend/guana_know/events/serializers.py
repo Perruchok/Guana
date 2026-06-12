@@ -2,6 +2,8 @@
 Serializers for events app.
 """
 
+from datetime import timedelta
+
 from rest_framework import serializers
 from .models import Event
 
@@ -55,6 +57,9 @@ class EventSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'owner', 'registered_count', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'end_datetime': {'required': False},
+        }
     
     def get_is_upcoming(self, obj):
         return obj.is_upcoming()
@@ -75,11 +80,21 @@ class EventSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, data):
-        if data.get('end_datetime') and data.get('start_datetime'):
-            if data['end_datetime'] <= data['start_datetime']:
-                raise serializers.ValidationError({
-                    'end_datetime': 'End time must be after start time.'
-                })
+        start_datetime = data.get('start_datetime')
+        end_datetime = data.get('end_datetime')
+
+        # For create requests, default to a 2-hour duration when no end time is provided.
+        if self.instance is None and start_datetime and not end_datetime:
+            end_datetime = start_datetime + timedelta(hours=2)
+            data['end_datetime'] = end_datetime
+
+        effective_start = start_datetime or getattr(self.instance, 'start_datetime', None)
+        effective_end = end_datetime or getattr(self.instance, 'end_datetime', None)
+
+        if effective_end and effective_start and effective_end <= effective_start:
+            raise serializers.ValidationError({
+                'end_datetime': 'End time must be after start time.'
+            })
         
         if data.get('price') and data['price'] > 0:
             data['is_free'] = False

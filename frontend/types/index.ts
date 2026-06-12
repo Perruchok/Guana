@@ -73,7 +73,8 @@ export interface Subscription {
 export type VenueStatus   = 'draft' | 'published' | 'archived'
 export type VenueCategory =
   | 'museum' | 'gallery' | 'theater' | 'cinema'
-  | 'cafe' | 'cultural_center' | 'library'
+  | 'cafe' | 'bar' | 'restaurant' | 'hotel_hostel'
+  | 'cultural_center' | 'library'
   | 'market' | 'public_space' | 'other'
 
 export interface Venue {

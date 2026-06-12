@@ -169,6 +169,7 @@ class Command(BaseCommand):
     def _build_venue_data(self, row_data, slug, owner):
         valid_categories = [
             "museum", "gallery", "theater", "cinema", "cafe",
+            "bar", "restaurant", "hotel_hostel",
             "cultural_center", "library", "market", "public_space", "other"
         ]
         valid_statuses = ["draft", "published", "archived"]

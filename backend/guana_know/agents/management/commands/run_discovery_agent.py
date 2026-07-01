@@ -7,6 +7,25 @@ Usage:
     python manage.py run_discovery_agent
     python manage.py run_discovery_agent --url <url>
     python manage.py run_discovery_agent --dry-run
+
+Quick examples:
+    # Normal run: all active sources
+    python manage.py run_discovery_agent
+
+    # Dry run: all active sources
+    python manage.py run_discovery_agent --dry-run
+
+    # Normal run: one source by URL
+    python manage.py run_discovery_agent --url "https://example.com/events"
+
+    # Dry run: one source by URL
+    python manage.py run_discovery_agent --url "https://example.com/events" --dry-run
+
+    # Dry run: all sources using Apify Facebook strategy
+    python manage.py run_discovery_agent --strategy apify_facebook --dry-run
+
+    # Normal run: all sources using JSON-LD strategy
+    python manage.py run_discovery_agent --strategy json_ld
 """
 
 import logging
@@ -17,7 +36,10 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Runs the autonomous event discovery agent for registered EventSources.'
+    help = (
+        'Runs the autonomous event discovery agent for registered EventSources. '
+        'Supports filtering by URL and scrape strategy, and optional dry-run mode.'
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -33,6 +55,16 @@ class Command(BaseCommand):
             default=False,
             help='Run the full agent loop but do not write anything to the database.',
         )
+        parser.add_argument(
+            '--strategy',
+            type=str,
+            default=None,
+            choices=['generic', 'json_ld', 'ical', 'apify_facebook', 'apify_instagram'],
+            help=(
+                'Process only sources with this scrape strategy. '
+                'Examples: apify_facebook, generic, json_ld.'
+            ),
+        )
 
     def handle(self, *args, **options):
         from guana_know.agents.models import EventSource
@@ -40,19 +72,32 @@ class Command(BaseCommand):
 
         url = options['url']
         dry_run = options['dry_run']
+        strategy = options['strategy']
 
         if url:
             try:
-                sources = [EventSource.objects.get(url=url, is_active=True)]
+                source = EventSource.objects.get(url=url, is_active=True)
             except EventSource.DoesNotExist:
                 raise CommandError(f'No active EventSource found for URL: {url}')
+
+            if strategy and source.scrape_strategy != strategy:
+                raise CommandError(
+                    'The selected source does not match the requested strategy. '
+                    f'Source strategy: {source.scrape_strategy}; requested: {strategy}.'
+                )
+
+            sources = [source]
         else:
-            sources = list(
-                EventSource.objects.filter(is_active=True)
-                .order_by('last_scraped_at')
-            )
+            qs = EventSource.objects.filter(is_active=True)
+            if strategy:
+                qs = qs.filter(scrape_strategy=strategy)
+
+            sources = list(qs.order_by('last_scraped_at'))
             if not sources:
-                self.stdout.write('No active EventSources registered.')
+                if strategy:
+                    self.stdout.write(f'No active EventSources registered for strategy: {strategy}')
+                else:
+                    self.stdout.write('No active EventSources registered.')
                 return
 
         for source in sources:
@@ -81,11 +126,27 @@ class Command(BaseCommand):
         candidates = result.get('candidates', [])
         total = result.get('total_found', 0)
         duplicates = result.get('total_duplicates', 0)
+        total_raw = result.get('total_raw_found', total)
+
+        geo_kept_local = result.get('geo_kept_local')
+        geo_skipped_non_local = result.get('geo_skipped_non_local')
+        geo_skipped_unknown = result.get('geo_skipped_unknown_location')
+        geo_llm_checked = result.get('geo_llm_checked')
 
         stdout.write('')
         stdout.write('━' * 60)
         stdout.write('  DRY RUN REPORT')
         stdout.write(f'  Events found: {total}  |  Duplicates: {duplicates}')
+        if total_raw != total:
+            stdout.write(f'  Raw events from source: {total_raw}')
+        if geo_kept_local is not None:
+            stdout.write(
+                '  Geo filter: '
+                f'kept_local={geo_kept_local}, '
+                f'skipped_non_local={geo_skipped_non_local}, '
+                f'skipped_unknown={geo_skipped_unknown}, '
+                f'llm_checked={geo_llm_checked}'
+            )
         stdout.write('━' * 60)
 
         if not candidates:

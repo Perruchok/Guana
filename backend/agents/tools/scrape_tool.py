@@ -218,6 +218,7 @@ def _scrape_apify_facebook(url: str) -> dict:
     Requires APIFY_API_TOKEN in the environment.
     Actor can be overridden via APIFY_FACEBOOK_ACTOR_ID (default: apify~facebook-events-scraper).
     """
+    import json
     import os
     import time
 
@@ -232,6 +233,22 @@ def _scrape_apify_facebook(url: str) -> dict:
 
     actor_id = os.environ.get('APIFY_FACEBOOK_ACTOR_ID', 'apify~facebook-events-scraper')
 
+    # Optional actor input override for better field coverage.
+    # Example:
+    # APIFY_FACEBOOK_RUN_INPUT_JSON='{"resultsLimit": 50, "includeDescription": true}'
+    run_input: dict = {'startUrls': [url]}
+    extra_input_raw = os.environ.get('APIFY_FACEBOOK_RUN_INPUT_JSON', '').strip()
+    if extra_input_raw:
+        try:
+            extra_input = json.loads(extra_input_raw)
+            if isinstance(extra_input, dict):
+                run_input.update(extra_input)
+                run_input.setdefault('startUrls', [url])
+            else:
+                logger.warning('scrape_tool [apify_facebook]: APIFY_FACEBOOK_RUN_INPUT_JSON must be a JSON object')
+        except json.JSONDecodeError:
+            logger.warning('scrape_tool [apify_facebook]: invalid APIFY_FACEBOOK_RUN_INPUT_JSON')
+
     logger.info('scrape_tool [apify_facebook]: starting actor %s for %s', actor_id, url)
 
     try:
@@ -239,7 +256,7 @@ def _scrape_apify_facebook(url: str) -> dict:
             run_resp = client.post(
                 f'https://api.apify.com/v2/acts/{actor_id}/runs',
                 params={'token': apify_token},
-                json={'startUrls': [url]},
+                json=run_input,
             )
     except httpx.RequestError as exc:
         logger.warning('scrape_tool [apify_facebook]: request error starting run — %s', exc)

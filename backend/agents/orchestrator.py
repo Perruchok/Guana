@@ -18,6 +18,7 @@ Confidence threshold:
 import json
 import logging
 import os
+import unicodedata
 from datetime import datetime, timezone
 
 from openai import AzureOpenAI
@@ -111,9 +112,6 @@ def _dispatch_tool(tool_name: str, tool_input: dict) -> str:
 def run_for_source(source_url: str, source_type: str, strategy: str = 'generic', dry_run: bool = False) -> dict:
     from guana_know.agents.models import AgentRun
 
-    if not os.environ.get('AZURE_OPENAI_API_KEY'):
-        raise EnvironmentError('AZURE_OPENAI_API_KEY environment variable is not set.')
-
     run_record = None
     if not dry_run:
         run_record = AgentRun.objects.create(status='running')
@@ -121,6 +119,9 @@ def run_for_source(source_url: str, source_type: str, strategy: str = 'generic',
     # Structured sources bypass the LLM pipeline entirely.
     if strategy in ('apify_facebook', 'apify_instagram'):
         return _run_structured_source(source_url, strategy, dry_run, run_record)
+
+    if not os.environ.get('AZURE_OPENAI_API_KEY'):
+        raise EnvironmentError('AZURE_OPENAI_API_KEY environment variable is not set.')
 
     try:
         client = AzureOpenAI(
@@ -271,7 +272,7 @@ def _infer_category(title: str, description: str) -> str:
 def _map_apify_facebook_event(item: dict) -> dict:
     """Maps a raw Apify Facebook event item to our internal event_data format."""
     name = item.get('name') or ''
-    description = item.get('description') or ''
+    description = item.get('description') or item.get('details') or item.get('about') or ''
 
     # utcStartDate is always ISO 8601 UTC from the actor
     start_time = item.get('utcStartDate') or None
@@ -279,11 +280,14 @@ def _map_apify_facebook_event(item: dict) -> dict:
 
     location = item.get('location') or {}
     if isinstance(location, dict):
-        venue_name = location.get('name') or None
+        venue_name = location.get('name') or item.get('location.name') or None
+        location_city = location.get('city') or item.get('location.city') or None
     elif isinstance(location, str):
         venue_name = location
+        location_city = item.get('location.city') or None
     else:
-        venue_name = None
+        venue_name = item.get('location.name') or None
+        location_city = item.get('location.city') or None
 
     image_url = item.get('imageUrl') or None
 
@@ -301,7 +305,137 @@ def _map_apify_facebook_event(item: dict) -> dict:
         'is_free': is_free,
         'registration_url': event_url,
         'image_url': image_url,
+        'location_city': location_city,
+        'location_name': venue_name,
     }
+
+
+_TARGET_CITY = 'guanajuato'
+_TARGET_STATE = 'guanajuato'
+_NON_TARGET_GTO_CITIES = {
+    'leon', 'irapuato', 'celaya', 'salamanca', 'silao', 'acambaro',
+    'san miguel de allende', 'san miguel', 'dolores hidalgo',
+    'purisima del rincon', 'san francisco del rincon', 'moroleon',
+    'uriangato', 'pueblo nuevo', 'cortazar', 'valle de santiago',
+    'salvatierra', 'penjamo', 'jeracuaro', 'abasolo',
+}
+
+
+def _norm_text(value: str | None) -> str:
+    if not value:
+        return ''
+    value = unicodedata.normalize('NFKD', str(value))
+    return ''.join(ch for ch in value if not unicodedata.combining(ch)).lower().strip()
+
+
+def _is_target_city_name(city_value: str | None) -> bool:
+    city = _norm_text(city_value)
+    return city in {'guanajuato', 'guanajuato city'}
+
+
+def _is_non_target_city_name(city_value: str | None) -> bool:
+    city = _norm_text(city_value)
+    if not city:
+        return False
+    if city in {'guanajuato', 'guanajuato city'}:
+        return False
+    return city in _NON_TARGET_GTO_CITIES
+
+
+def _llm_assess_city_scope(event_data: dict, source_url: str) -> tuple[str, str]:
+    """
+    Uses a lightweight LLM check only for ambiguous location cases.
+
+    Returns a tuple: (decision, reason), where decision is one of:
+      - 'local'
+      - 'non_local'
+      - 'unknown'
+    """
+    if os.environ.get('APIFY_CITY_FILTER_USE_LLM', '1') != '1':
+        return 'unknown', 'llm_disabled'
+
+    api_key = os.environ.get('AZURE_OPENAI_API_KEY')
+    endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
+    if not api_key or not endpoint:
+        return 'unknown', 'llm_unavailable_missing_env'
+
+    try:
+        client = AzureOpenAI(
+            api_key=api_key,
+            azure_endpoint=endpoint,
+            api_version=os.environ.get('AZURE_OPENAI_API_VERSION', '2025-01-01-preview'),
+        )
+
+        prompt = {
+            'target_city': 'Guanajuato, Guanajuato, Mexico',
+            'source_url': source_url,
+            'event_title': event_data.get('title'),
+            'venue_name': event_data.get('venue_name'),
+            'location_city': event_data.get('location_city'),
+            'description': (event_data.get('description') or '')[:500],
+        }
+
+        response = client.chat.completions.create(
+            model=os.environ.get('AZURE_OPENAI_DEPLOYMENT', 'gpt-4o-mini'),
+            max_tokens=80,
+            temperature=0,
+            messages=[
+                {
+                    'role': 'system',
+                    'content': (
+                        'Classify whether an event is in Guanajuato city (capital), '
+                        'not just the state. Return only JSON with keys decision and reason. '
+                        'decision must be one of local, non_local, unknown.'
+                    ),
+                },
+                {'role': 'user', 'content': json.dumps(prompt, ensure_ascii=False)},
+            ],
+        )
+
+        raw = (response.choices[0].message.content or '').strip()
+        data = json.loads(raw)
+        decision = data.get('decision', 'unknown')
+        if decision not in {'local', 'non_local', 'unknown'}:
+            decision = 'unknown'
+        reason = str(data.get('reason', 'llm_no_reason'))[:120]
+        return decision, reason
+    except Exception as exc:
+        logger.warning('_llm_assess_city_scope: failed for "%s" — %s', event_data.get('title', ''), exc)
+        return 'unknown', 'llm_error'
+
+
+def _assess_city_scope(event_data: dict, source_url: str) -> tuple[str, str, bool]:
+    """
+    Deterministically assesses whether an event is inside Guanajuato city.
+    Falls back to light LLM only when the location is ambiguous.
+
+    Returns (decision, reason, used_llm).
+    """
+    city = event_data.get('location_city')
+    venue_name = event_data.get('venue_name') or ''
+    description = event_data.get('description') or ''
+
+    if _is_target_city_name(city):
+        return 'local', 'location_city_is_target', False
+
+    if _is_non_target_city_name(city):
+        return 'non_local', 'location_city_non_target', False
+
+    venue_norm = _norm_text(venue_name)
+    if 'guanajuato' in venue_norm and 'estado de guanajuato' not in venue_norm:
+        return 'local', 'venue_mentions_target_city', False
+
+    for city_name in _NON_TARGET_GTO_CITIES:
+        if city_name in venue_norm:
+            return 'non_local', 'venue_mentions_non_target_city', False
+
+    text_norm = _norm_text(f'{venue_name} {description}')
+    for city_name in _NON_TARGET_GTO_CITIES:
+        if city_name in text_norm:
+            return 'non_local', 'text_mentions_non_target_city', False
+
+    llm_decision, llm_reason = _llm_assess_city_scope(event_data, source_url)
+    return llm_decision, llm_reason, True
 
 
 def _run_structured_source(
@@ -338,6 +472,10 @@ def _run_structured_source(
         raw_events = scrape_result.get('structured_events', [])
         candidates = []
         total_duplicates = 0
+        geo_kept_local = 0
+        geo_skipped_non_local = 0
+        geo_skipped_unknown = 0
+        geo_llm_checked = 0
 
         for item in raw_events:
             if strategy == 'apify_facebook':
@@ -348,6 +486,22 @@ def _run_structured_source(
             title = event_data.get('title', '')
             if not title:
                 continue
+
+            decision, reason, used_llm = _assess_city_scope(event_data, source_url)
+            if used_llm:
+                geo_llm_checked += 1
+
+            if decision == 'non_local':
+                geo_skipped_non_local += 1
+                logger.info('_run_structured_source: skipping non-local event "%s" (%s)', title, reason)
+                continue
+
+            if decision != 'local':
+                geo_skipped_unknown += 1
+                logger.info('_run_structured_source: skipping unknown-location event "%s" (%s)', title, reason)
+                continue
+
+            geo_kept_local += 1
 
             dedup_result = dedup_tool.run(
                 title=title,
@@ -373,8 +527,13 @@ def _run_structured_source(
             'candidates': candidates,
             'scrape_status': scrape_result.get('status_code', 200),
             'total_found': len(candidates),
+            'total_raw_found': len(raw_events) if isinstance(raw_events, list) else 0,
             'total_duplicates': total_duplicates,
             'strategy': strategy,
+            'geo_kept_local': geo_kept_local,
+            'geo_skipped_non_local': geo_skipped_non_local,
+            'geo_skipped_unknown_location': geo_skipped_unknown,
+            'geo_llm_checked': geo_llm_checked,
         }
 
         if not dry_run:
@@ -383,6 +542,9 @@ def _run_structured_source(
             from django.utils import timezone as tz
             from django.utils.dateparse import parse_datetime
             for candidate in candidates:
+                image_url = candidate['event_data'].get('image_url')
+                candidate['image_verification'] = _verify_image_url(image_url)
+
                 start_raw = candidate['event_data'].get('start_datetime')
                 if start_raw:
                     dt = parse_datetime(str(start_raw))

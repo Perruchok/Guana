@@ -50,10 +50,22 @@ export default function NuevoEventoPage() {
         return
       }
       try {
-        const result = await venues.list({}, token)
-        setUserVenues(result.results as Venue[])
-        if (result.results.length > 0) {
-          setForm((prev) => ({ ...prev, venue: (result.results[0] as Venue).id }))
+        const allVenues: Venue[] = []
+        let page = 1
+
+        // /venues/ is paginated in the backend (PAGE_SIZE=20), so gather every page.
+        while (true) {
+          const result = await venues.list({ page }, token)
+          const pageResults = result.results as Venue[]
+          allVenues.push(...pageResults)
+
+          if (!result.next) break
+          page += 1
+        }
+
+        setUserVenues(allVenues)
+        if (allVenues.length > 0) {
+          setForm((prev) => ({ ...prev, venue: allVenues[0].id }))
         }
       } catch (err) {
         console.error('Error loading venues:', err)

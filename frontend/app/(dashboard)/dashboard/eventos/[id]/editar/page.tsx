@@ -4,10 +4,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { events, venues } from '@/lib/api'
+import { events, venues, uploads } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
 import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
 import { formatDate, formatTime } from '@/lib/auth'
+import ImageUploader from '@/components/ui/ImageUploader'
 import type { Event, EventCategory, Venue } from '@/types'
 
 export default function EditarEventoPage() {
@@ -36,9 +37,25 @@ export default function EditarEventoPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [pendingImage, setPendingImage] = useState<File | null>(null)
+  const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null)
   const [venuesLoading, setVenuesLoading] = useState(true)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    if (!pendingImage) {
+      setPendingImagePreview(null)
+      return
+    }
+
+    const previewUrl = URL.createObjectURL(pendingImage)
+    setPendingImagePreview(previewUrl)
+
+    return () => {
+      URL.revokeObjectURL(previewUrl)
+    }
+  }, [pendingImage])
 
   // Fetch event and venues
   useEffect(() => {
@@ -93,11 +110,20 @@ export default function EditarEventoPage() {
     setSaving(true)
 
     try {
-      await events.update(token, event.id, {
+      const updatedEvent = await events.update(token, event.id, {
         ...form,
+        slug: event.slug,
         price: form.is_free ? 0 : form.price,
         capacity: form.capacity ? parseInt(form.capacity) : null,
       })
+
+      let finalEvent = updatedEvent
+      if (pendingImage) {
+        finalEvent = await uploads.eventImage(token, event.id, pendingImage)
+      }
+
+      setEvent(finalEvent)
+      setPendingImage(null)
 
       setSuccess('Evento actualizado ✓')
       setTimeout(() => {
@@ -197,6 +223,14 @@ export default function EditarEventoPage() {
             guana.mx/eventos/<span className="text-brand-blue-light">{event.slug}</span>
           </p>
         </div>
+
+        <ImageUploader
+          currentImage={pendingImagePreview || event.image || null}
+          onUpload={async (file) => setPendingImage(file)}
+          loading={saving || deleting}
+          label="Imagen del evento"
+          hint="JPG, PNG o WebP · Máx 5MB"
+        />
 
         {/* Venue selection */}
         {venuesLoading ? (

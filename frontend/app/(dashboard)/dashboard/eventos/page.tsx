@@ -5,27 +5,44 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { events, auth } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
-import { EVENT_CATEGORY_LABELS, EVENT_TAG_CLASSES, formatPrice } from '@/lib/utils'
+import { EVENT_CATEGORY_LABELS, EVENT_TAG_CLASSES } from '@/lib/utils'
 import { formatDate, formatTime } from '@/lib/auth'
 import type { Event } from '@/types'
+
+const DASHBOARD_EVENTS_PAGE_SIZE = 20
 
 export default function EventosPage() {
   const token = tokenStore.getAccess()
   const [eventList, setEventList] = useState<Event[]>([])
+  const [totalEvents, setTotalEvents] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [instagramDraftsOnly, setInstagramDraftsOnly] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const filteredEvents = instagramDraftsOnly
+    ? eventList.filter((event) => event.status === 'draft')
+    : eventList
 
   useEffect(() => {
     const fetchEvents = async () => {
       if (!token) return
       setLoading(true)
+      setError(null)
       try {
         // first grab current user so we can filter by owner
         const me = await auth.me(token)
-        const ownerFilter = { owner: me.id }
+        const ownerFilter = {
+          owner: me.id,
+          page: currentPage,
+          ordering: '-created_at',
+        }
         const result = await events.list(ownerFilter, token)
         setEventList(result.results as Event[])
+        setTotalEvents(result.count)
+        setTotalPages(Math.max(1, Math.ceil(result.count / DASHBOARD_EVENTS_PAGE_SIZE)))
       } catch (err) {
         setError('Error al cargar tus eventos')
       } finally {
@@ -33,17 +50,23 @@ export default function EventosPage() {
       }
     }
     fetchEvents()
-  }, [token])
+  }, [token, currentPage])
 
   const handleDelete = async (id: string) => {
     if (!token) return
     try {
       await events.remove(token, id)
-      setEventList(eventList.filter((e) => e.id !== id))
+      setEventList((current) => current.filter((e) => e.id !== id))
+      setTotalEvents((current) => Math.max(0, current - 1))
       setDeleteConfirm(null)
     } catch (err) {
       setError('Error al eliminar el evento')
     }
+  }
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return
+    setCurrentPage(page)
   }
 
   const getStatusColor = (status: string) => {
@@ -66,6 +89,26 @@ export default function EventosPage() {
         </Link>
       </div>
 
+      <div className="mb-6 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setInstagramDraftsOnly((prev) => !prev)}
+          className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
+            instagramDraftsOnly
+              ? 'bg-brand-blue text-white'
+              : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-gray-900'
+          }`}
+        >
+          Borradores de Instagram
+        </button>
+      </div>
+
+      {instagramDraftsOnly && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Revisa y edita estos borradores antes de publicarlos.
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm mb-6">
           {error}
@@ -79,9 +122,10 @@ export default function EventosPage() {
           </div>
           <p className="text-slate-500 mt-4">Cargando tus eventos...</p>
         </div>
-      ) : eventList.length > 0 ? (
-        <div className="bg-white border border-slate-200 rounded-sm overflow-hidden">
-          <div className="overflow-x-auto">
+      ) : filteredEvents.length > 0 ? (
+        <div className="space-y-4">
+          <div className="bg-white border border-slate-200 rounded-sm overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
@@ -93,7 +137,7 @@ export default function EventosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {eventList.map((event) => {
+                {filteredEvents.map((event) => {
                   const categoryLabel = EVENT_CATEGORY_LABELS[event.category]
                   const tagClass = EVENT_TAG_CLASSES[event.category]
                   return (
@@ -138,6 +182,32 @@ export default function EventosPage() {
                 })}
               </tbody>
             </table>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-sm border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-slate-500">
+              Mostrando página {currentPage} de {totalPages} · {totalEvents} eventos en total
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                className="rounded-sm border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <span className="min-w-16 text-center text-xs font-semibold text-slate-700">{currentPage}</span>
+              <button
+                type="button"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                className="rounded-sm border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -148,10 +218,12 @@ export default function EventosPage() {
             </div>
           </div>
           <h2 className="font-bold tracking-tight text-xl text-gray-900 mb-2">
-            Aún no tienes eventos
+            {instagramDraftsOnly ? 'No tienes borradores de Instagram' : 'Aún no tienes eventos'}
           </h2>
           <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-            Publica tu primer evento para que aparezca aquí. ¡Los visitantes podrán descubrir lo que tienes para ofrecer!
+            {instagramDraftsOnly
+              ? 'Cuando sincronices Instagram y se detecten eventos, aparecerán aquí como borradores.'
+              : 'Publica tu primer evento para que aparezca aquí. ¡Los visitantes podrán descubrir lo que tienes para ofrecer!'}
           </p>
           <Link
             href="/dashboard/eventos/nuevo"

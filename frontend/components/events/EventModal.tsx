@@ -28,10 +28,10 @@ export default function EventModal({ event, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-ink/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-ink/60 py-6 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="animate-modal bg-brand-dark rounded-xl w-[90%] max-w-[620px] max-h-[90vh] overflow-y-auto">
+      <div className="animate-modal bg-brand-dark rounded-xl w-[90%] max-w-[620px] overflow-hidden">
 
         {/* Header */}
         <div className="bg-brand-navy px-6 py-5 flex items-start justify-between">
@@ -51,9 +51,15 @@ export default function EventModal({ event, onClose }: Props) {
         </div>
 
         {/* Image */}
-        <div className="relative w-full h-48 bg-slate-800 mb-6 flex items-center justify-center overflow-hidden">
+        <div className="w-full bg-black mb-6">
           {event.image ? (
-            <Image src={event.image} alt={event.title} fill className="object-cover" />
+            <Image
+              src={event.image}
+              alt={event.title}
+              width={1200}
+              height={1800}
+              className="block w-full h-auto"
+            />
           ) : (
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C4B8A4" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" />

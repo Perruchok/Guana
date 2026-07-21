@@ -126,6 +126,24 @@ class TestEventViews:
         assert resp.status_code == 200
         assert resp.json()["title"] == "new"
 
+    def test_put_owner_missing_slug_returns_400(self, auth_client, user):
+        ev = EventFactory(owner=user)
+        resp = auth_client.put(
+            f"/api/events/{ev.id}/",
+            {
+                "title": "new",
+                "description": "d",
+                "category": "exhibition",
+                "start_datetime": "2030-01-01T10:00:00Z",
+                "end_datetime": "2030-01-01T12:00:00Z",
+                "venue": ev.venue.id,
+                "status": "published",
+            },
+            format="json"
+        )
+        assert resp.status_code == 400
+        assert "slug" in resp.json()
+
     def test_put_non_owner_gets_403(self, auth_client, other_user):
         ev = EventFactory(owner=other_user)
         resp = auth_client.put(
@@ -139,6 +157,19 @@ class TestEventViews:
         ev = EventFactory(owner=other_user)
         resp = auth_client.delete(f"/api/events/{ev.id}/")
         assert resp.status_code == 403
+
+    def test_owner_filter_ordering_created_at_desc_returns_newest_first(self, auth_client, user):
+        older_event = EventFactory(owner=user, status='published')
+        newer_event = EventFactory(owner=user, status='published')
+
+        resp = auth_client.get(f'/api/events/?owner={user.id}&ordering=-created_at')
+
+        assert resp.status_code == 200
+        data = resp.json()
+        ids = [str(ev['id']) for ev in data['results']]
+        assert str(older_event.id) in ids
+        assert str(newer_event.id) in ids
+        assert ids.index(str(newer_event.id)) < ids.index(str(older_event.id))
 
     def test_put_owner_can_change_status_draft_to_published(self, auth_client, user):
         """Test event status change from draft to published"""

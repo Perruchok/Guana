@@ -107,9 +107,20 @@ class Command(BaseCommand):
             except EnvironmentError as exc:
                 raise CommandError(str(exc))
 
+            # Keep dry/non-dry behavior aligned: if the source run failed,
+            # do not print a misleading success summary.
+            if result.get('error'):
+                error_msg = f'Source failed for {source.url}: {result.get("error")}'
+                if dry_run:
+                    self.stdout.write(self.style.WARNING(error_msg))
+                    self._print_run_report(result, self.stdout, dry_run=True)
+                    continue
+                raise CommandError(error_msg)
+
             if dry_run:
-                self._print_dry_run_report(result, self.stdout)
+                self._print_run_report(result, self.stdout, dry_run=True)
             else:
+                self._print_run_report(result, self.stdout, dry_run=False)
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"Done. Events created: {result.get('written_events', 0)}, "
@@ -122,7 +133,7 @@ class Command(BaseCommand):
                 source.last_scraped_at = datetime.now(timezone.utc)
                 source.save(update_fields=['last_scraped_at'])
 
-    def _print_dry_run_report(self, result: dict, stdout) -> None:
+    def _print_run_report(self, result: dict, stdout, dry_run: bool) -> None:
         candidates = result.get('candidates', [])
         total = result.get('total_found', 0)
         duplicates = result.get('total_duplicates', 0)
@@ -135,7 +146,7 @@ class Command(BaseCommand):
 
         stdout.write('')
         stdout.write('━' * 60)
-        stdout.write('  DRY RUN REPORT')
+        stdout.write('  DRY RUN REPORT' if dry_run else '  RUN REPORT')
         stdout.write(f'  Events found: {total}  |  Duplicates: {duplicates}')
         if total_raw != total:
             stdout.write(f'  Raw events from source: {total_raw}')
@@ -163,7 +174,21 @@ class Command(BaseCommand):
             is_duplicate = candidate.get('is_duplicate', False)
             img_check = candidate.get('image_verification', {})
 
-            is_past = candidate.get('is_past', False)
+            is_past = candidate.get('is_past')
+            if is_past is None:
+                from django.utils import timezone as tz
+                from django.utils.dateparse import parse_datetime
+                start_raw = data.get('start_datetime')
+                if start_raw:
+                    dt = parse_datetime(str(start_raw))
+                    if dt:
+                        if tz.is_naive(dt):
+                            dt = tz.make_aware(dt)
+                        is_past = dt < tz.now()
+                    else:
+                        is_past = False
+                else:
+                    is_past = False
 
             if is_duplicate:
                 would_save = 'SKIP (duplicate)'
@@ -184,6 +209,8 @@ class Command(BaseCommand):
                 kb = img_check.get('size_kb')
                 size_str = f', {kb}KB' if kb else ''
                 img_line = f'✅ reachable ({ct}{size_str})'
+            elif img_status == 'none' and data.get('image_url') and not dry_run:
+                img_line = '— image present (verified during save flow)'
             elif img_status == 'none':
                 img_line = '— no image found'
             elif img_status == 'unreachable':
@@ -203,6 +230,15 @@ class Command(BaseCommand):
             if candidate.get('is_past'):
                 stdout.write(f'      ⚠️  Past event — would be skipped')
             stdout.write(f'      Venue:      {data.get("venue_name", "unknown")}')
+            if data.get('location_city'):
+                stdout.write(f'      Location:   city={data.get("location_city")}')
+            if candidate.get('geo_reason') or candidate.get('geo_decision'):
+                stdout.write(
+                    '      Geo check:  '
+                    f'decision={candidate.get("geo_decision", "n/a")}, '
+                    f'reason={candidate.get("geo_reason", "n/a")}, '
+                    f'used_llm={"Yes" if candidate.get("geo_used_llm") else "No"}'
+                )
             stdout.write(f'      Category:   {data.get("category", "other")}')
             stdout.write(f'      Price:      {"Free" if data.get("is_free") else data.get("price")}')
             stdout.write(f'      Confidence: {confidence:.0%}')
@@ -211,7 +247,22 @@ class Command(BaseCommand):
             stdout.write(f'      Image:      {img_line}')
             stdout.write(f'      Image URL:  {data.get("image_url", "none")}')
             stdout.write(f'      Duplicate:  {"Yes" if is_duplicate else "No"}')
-            stdout.write(f'      Would save: {save_style(would_save)}')
+            if dry_run:
+                stdout.write(f'      Would save: {save_style(would_save)}')
+            else:
+                if is_duplicate:
+                    outcome = 'Skipped (duplicate)'
+                    outcome_style = self.style.WARNING
+                elif is_past:
+                    outcome = 'Skipped (past event)'
+                    outcome_style = self.style.WARNING
+                elif confidence >= 0.80 and not issues:
+                    outcome = 'Saved as Event (draft)'
+                    outcome_style = self.style.SUCCESS
+                else:
+                    outcome = 'Saved as EventDraft (pending review)'
+                    outcome_style = self.style.NOTICE
+                stdout.write(f'      Outcome:    {outcome_style(outcome)}')
 
         stdout.write('')
         stdout.write('━' * 60)

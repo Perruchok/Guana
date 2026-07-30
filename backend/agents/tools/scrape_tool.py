@@ -232,6 +232,8 @@ def _scrape_apify_facebook(url: str) -> dict:
         }
 
     actor_id = os.environ.get('APIFY_FACEBOOK_ACTOR_ID', 'apify~facebook-events-scraper')
+    poll_interval = max(1, int(os.environ.get('APIFY_POLL_INTERVAL_SECONDS', _APIFY_POLL_INTERVAL)))
+    max_polls = max(1, int(os.environ.get('APIFY_MAX_POLLS', _APIFY_MAX_POLLS)))
 
     # Optional actor input override for better field coverage.
     # Example:
@@ -290,8 +292,8 @@ def _scrape_apify_facebook(url: str) -> dict:
 
     # Poll for completion
     final_status = ''
-    for _ in range(_APIFY_MAX_POLLS):
-        time.sleep(_APIFY_POLL_INTERVAL)
+    for _ in range(max_polls):
+        time.sleep(poll_interval)
         try:
             with httpx.Client(timeout=15) as client:
                 status_resp = client.get(
@@ -311,9 +313,20 @@ def _scrape_apify_facebook(url: str) -> dict:
                 'strategy': 'apify_facebook',
             }
     else:
+        logger.warning(
+            'scrape_tool [apify_facebook]: run timeout after %s polls x %ss (last_status=%s, run_id=%s)',
+            max_polls,
+            poll_interval,
+            final_status or 'unknown',
+            run_id,
+        )
         return {
             'content': '', 'event_links': [], 'status_code': 0,
-            'error': 'Apify run did not complete within the timeout.',
+            'error': (
+                'Apify run did not complete within the timeout. '
+                f'run_id={run_id}, last_status={final_status or "unknown"}, '
+                f'max_wait_seconds={max_polls * poll_interval}'
+            ),
             'strategy': 'apify_facebook',
         }
 

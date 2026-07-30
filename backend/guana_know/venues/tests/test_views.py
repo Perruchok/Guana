@@ -88,6 +88,20 @@ class TestVenueViews:
         data = resp.json()
         assert str(data['owner']) == str(user.id)
 
+    def test_post_authenticated_generates_slug_when_missing(self, auth_client, user):
+        payload = {
+            'name': 'Mi Venue Nuevo',
+            'description': 'desc',
+            'category': 'museum',
+            'address': 'addr',
+            'city': 'Gto',
+            'status': 'draft',
+        }
+        resp = auth_client.post('/api/venues/', payload, format='json')
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data['slug'] == 'mi-venue-nuevo'
+
     def test_put_owner_can_update(self, auth_client, user):
         v = VenueFactory(owner=user)
         resp = auth_client.put(

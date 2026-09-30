@@ -8,7 +8,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { events } from '@/lib/api'
 import { formatDateTime } from '@/lib/auth'
-import { EVENT_CATEGORY_LABELS, formatPrice } from '@/lib/utils'
+import { EVENT_CATEGORY_LABELS, formatPrice, mapsLink } from '@/lib/utils'
 import type { Event } from '@/types'
 
 async function getEventBySlug(slug: string): Promise<Event | null> {
@@ -109,12 +109,14 @@ export default async function EventPage({ params }: { params: { slug: string } }
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <Link
-                    href={`/lugares/${event.venue_slug}`}
+                  <a
+                    href={mapsLink({ name: event.venue_name, address: '', city: 'Guanajuato' })}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-light"
                   >
                     Ver lugar
-                  </Link>
+                  </a>
 
                   {event.registration_url ? (
                     <a

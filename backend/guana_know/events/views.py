@@ -3,6 +3,7 @@ Views for events app.
 """
 
 from rest_framework import viewsets, filters, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -10,9 +11,16 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from .models import Event
 from .serializers import EventSerializer, EventListSerializer
 from .permissions import IsOwnerOrReadOnly
+
+
+class EventPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 12
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -26,6 +34,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
     
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    pagination_class = EventPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     # allow filtering by owner for dashboard context
     filterset_fields = ['slug', 'category', 'venue__city', 'is_featured', 'is_free', 'owner', 'venue']  # 'venue' ya está incluido
@@ -39,7 +48,6 @@ class EventViewSet(viewsets.ModelViewSet):
         return EventSerializer
     
     def get_queryset(self):
-        from django.utils import timezone
         now = timezone.now()
         user = self.request.user
 
@@ -47,16 +55,30 @@ class EventViewSet(viewsets.ModelViewSet):
             # Owners can see their own events regardless of date
             # (so they can review past drafts in the dashboard)
             # But published events are still filtered to upcoming only
-            return Event.objects.filter(
+            queryset = Event.objects.filter(
                 models.Q(status='published', start_datetime__gte=now)
                 | models.Q(owner=user)
             )
+        else:
+            # Public: only upcoming published events
+            queryset = Event.objects.filter(
+                status='published',
+                start_datetime__gte=now,
+            )
 
-        # Public: only upcoming published events
-        return Event.objects.filter(
-            status='published',
-            start_datetime__gte=now,
-        )
+        categories = self.request.query_params.get('categories')
+        if categories:
+            queryset = queryset.filter(category__in=categories.split(','))
+
+        start_date = parse_date(self.request.query_params.get('start_date', ''))
+        if start_date:
+            queryset = queryset.filter(start_datetime__date__gte=start_date)
+
+        end_date = parse_date(self.request.query_params.get('end_date', ''))
+        if end_date:
+            queryset = queryset.filter(start_datetime__date__lte=end_date)
+
+        return queryset
     
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

@@ -9,36 +9,40 @@ export const metadata = {
   description: 'Explora los eventos culturales proximos en Guanajuato.',
 }
 
-async function getCarteleraEvents(): Promise<EventsGridEvent[]> {
+async function getCarteleraEvents(): Promise<{ events: EventsGridEvent[]; total: number }> {
   try {
     const result = await events.list(
       {
         status: 'published',
         ordering: 'start_datetime',
+        page_size: 12,
       },
       null,
       { cache: 'no-store' }
     )
 
-    return ((result.results ?? []) as EventListItem[]).map((event) => ({
-      id: event.id,
-      title: event.title,
-      category: event.category,
-      startDatetime: event.start_datetime,
-      venueName: event.venue_name,
-      imageUrl: event.image,
-      slug: event.slug,
-      isFree: event.is_free,
-      price: event.price,
-    }))
+    return {
+      events: ((result.results ?? []) as EventListItem[]).map((event) => ({
+        id: event.id,
+        title: event.title,
+        category: event.category,
+        startDatetime: event.start_datetime,
+        venueName: event.venue_name,
+        imageUrl: event.image,
+        slug: event.slug,
+        isFree: event.is_free,
+        price: event.price,
+      })),
+      total: result.count,
+    }
   } catch (error) {
     console.error('Error loading cartelera events:', error)
-    return []
+    return { events: [], total: 0 }
   }
 }
 
 export default async function CarteleraPage() {
-  const initialEvents = await getCarteleraEvents()
+  const initialResult = await getCarteleraEvents()
 
   return (
     <>
@@ -54,7 +58,7 @@ export default async function CarteleraPage() {
             </p>
           </div>
 
-          <EventsGrid events={initialEvents} isLoading={false} />
+          <EventsGrid initialEvents={initialResult.events} initialTotal={initialResult.total} />
         </div>
       </main>
       <Footer />

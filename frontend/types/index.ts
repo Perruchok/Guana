@@ -187,7 +187,9 @@ export interface EventFilters {
   is_free?: boolean
   search?: string
   ordering?: string
-  page?: number
+  page?: number  page_size?: number
+  start_date?: string
+  end_date?: string
   venue?: string
   status?: EventStatus
   owner?: string

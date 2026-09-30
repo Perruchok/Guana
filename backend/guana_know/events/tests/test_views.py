@@ -1,5 +1,6 @@
 import pytest
 from dateutil.parser import isoparse
+from django.utils import timezone
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -41,6 +42,45 @@ def other_auth_client(other_user):
 
 @pytest.mark.django_db
 class TestEventViews:
+    def test_list_paginates_upcoming_events(self, api_client):
+        events = [
+            EventFactory(start_datetime=timezone.now() + timezone.timedelta(days=index + 1))
+            for index in range(13)
+        ]
+
+        response = api_client.get('/api/events/?ordering=start_datetime&page=2')
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data['count'] == 13
+        assert [event['id'] for event in data['results']] == [str(events[12].id)]
+
+    def test_list_filters_multiple_categories_and_date_range(self, api_client):
+        today = timezone.localdate()
+        music_event = EventFactory(
+            category='music',
+            start_datetime=timezone.make_aware(
+                timezone.datetime.combine(today + timezone.timedelta(days=2), timezone.datetime.min.time())
+            ),
+        )
+        festival_event = EventFactory(
+            category='festival',
+            start_datetime=timezone.make_aware(
+                timezone.datetime.combine(today + timezone.timedelta(days=3), timezone.datetime.min.time())
+            ),
+        )
+        EventFactory(category='exhibition', start_datetime=timezone.now() + timezone.timedelta(days=2))
+
+        response = api_client.get(
+            f'/api/events/?categories=music,festival&start_date={today}&end_date={today + timezone.timedelta(days=3)}'
+        )
+
+        assert response.status_code == 200
+        assert {event['id'] for event in response.json()['results']} == {
+            str(music_event.id),
+            str(festival_event.id),
+        }
+
     def test_get_unauthenticated_returns_only_published(self, api_client):
         # create one published and one draft event
         EventFactory(status='published')

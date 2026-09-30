@@ -12,7 +12,8 @@ import type {
   PaginatedResponse, ApiError,
 } from '@/types'
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
+const SERVER_BASE = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
+const BASE = typeof window === 'undefined' ? SERVER_BASE : '/api'
 export const API_BASE_URL = BASE
 
 // ── Core fetch wrapper ────────────────────────
@@ -102,7 +103,7 @@ export const auth = {
 
 export const events = {
   /** GET /events/ — public paginated list, or authenticated for owner filtering */
-  list: (filters: EventFilters = {}, token?: string | null, fetchOptions: RequestInit = {}) =>
+  list: (filters: EventFilters & { categories?: string } = {}, token?: string | null, fetchOptions: RequestInit = {}) =>
     apiFetch<PaginatedResponse<EventListItem>>(
       `/events/${toQueryString(filters as Record<string, unknown>)}`,
       { token, ...fetchOptions }

@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import EventCard from '@/components/events/EventCard'
 import FilterModal from '@/components/events/FilterModal'
 import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
-import type { EventCategory, EventFilters } from '@/types'
+import { events as eventsApi } from '@/lib/api'
+import type { EventCategory, EventFilters, EventListItem } from '@/types'
 
 export interface Event {
   id: string
@@ -20,6 +22,7 @@ export interface Event {
 
 type EventUiFilters = EventFilters & {
   categories?: EventCategory[]
+  datePeriod?: string
 }
 
 const FILTER_DOT_CLASSES: Record<EventCategory, string> = {
@@ -38,18 +41,98 @@ const FILTER_DOT_CLASSES: Record<EventCategory, string> = {
 }
 
 interface EventsGridProps {
-  events: Event[]
-  isLoading: boolean
+  initialEvents: Event[]
+  initialTotal: number
 }
 
-export default function EventsGrid({ events, isLoading }: EventsGridProps) {
+const PAGE_SIZE = 12
+
+function toGridEvent(event: EventListItem): Event {
+  return {
+    id: event.id,
+    title: event.title,
+    category: event.category,
+    startDatetime: event.start_datetime,
+    venueName: event.venue_name,
+    imageUrl: event.image,
+    slug: event.slug,
+    isFree: event.is_free,
+    price: event.price,
+  }
+}
+
+function getDateRange(datePeriod?: string) {
+  if (!datePeriod) return {}
+
+  const today = new Date()
+  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const endDate = new Date(startDate)
+  const formatDate = (date: Date) => date.toISOString().slice(0, 10)
+
+  if (datePeriod === 'tomorrow') {
+    startDate.setDate(startDate.getDate() + 1)
+    endDate.setTime(startDate.getTime())
+  } else if (datePeriod === 'week') {
+    endDate.setDate(endDate.getDate() + 6)
+  } else if (datePeriod === 'weekend') {
+    const daysUntilSaturday = (6 - startDate.getDay() + 7) % 7
+    startDate.setDate(startDate.getDate() + daysUntilSaturday)
+    endDate.setDate(startDate.getDate() + 1)
+  }
+
+  return { start_date: formatDate(startDate), end_date: formatDate(endDate) }
+}
+
+export default function EventsGrid({ initialEvents, initialTotal }: EventsGridProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState<EventUiFilters>({})
+  const [events, setEvents] = useState(initialEvents)
+  const [totalEvents, setTotalEvents] = useState(initialTotal)
+  const [page, setPage] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
-  const selectedCategories =
-    activeFilters.categories ?? (activeFilters.category ? [activeFilters.category] : [])
+  const selectedCategories = activeFilters.categories ?? []
+  const pageCount = Math.max(1, Math.ceil(totalEvents / PAGE_SIZE))
+  const apiFilters: EventFilters & { categories?: string } = {
+    status: 'published',
+    ordering: 'start_datetime',
+    page,
+    page_size: PAGE_SIZE,
+    search: normalizedQuery || undefined,
+    categories: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
+    is_free: activeFilters.is_free,
+    ...getDateRange(activeFilters.datePeriod),
+  }
+  const requestKey = JSON.stringify(apiFilters)
+  const initialRequestKey = useRef(JSON.stringify({ status: 'published', ordering: 'start_datetime', page: 1, page_size: PAGE_SIZE }))
+
+  useEffect(() => {
+    if (requestKey === initialRequestKey.current) return
+
+    let cancelled = false
+    setIsLoading(true)
+    setLoadError(false)
+
+    eventsApi.list(apiFilters)
+      .then((result) => {
+        if (cancelled) return
+        setEvents(result.results.map(toGridEvent))
+        setTotalEvents(result.count)
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true)
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [requestKey])
 
   const visibleEvents = events.filter((event) => {
     const matchesSearch =
@@ -58,29 +141,24 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
       event.venueName.toLowerCase().includes(normalizedQuery) ||
       event.category.toLowerCase().includes(normalizedQuery)
 
-    const matchesFilters =
-      selectedCategories.length === 0 ||
-      selectedCategories.includes(event.category)
-
-    const matchesFree = activeFilters.is_free ? event.isFree : true
-
-    return matchesSearch && matchesFilters && matchesFree
+    return matchesSearch
   })
 
   const handleApplyFilters = (filters: EventUiFilters) => {
     setActiveFilters(filters)
+    setPage(1)
   }
 
   const removeCategoryFilter = (filterToRemove: EventCategory) => {
     const remainingCategories = selectedCategories.filter((filterValue) => filterValue !== filterToRemove)
     setActiveFilters((currentFilters) => ({
       ...currentFilters,
-      category: undefined,
       categories: remainingCategories.length > 0 ? remainingCategories : undefined,
     }))
+    setPage(1)
   }
 
-  const activeFilterCount = selectedCategories.length + (activeFilters.is_free ? 1 : 0)
+  const activeFilterCount = selectedCategories.length + (activeFilters.is_free ? 1 : 0) + (activeFilters.datePeriod ? 1 : 0)
 
   return (
     <section>
@@ -103,7 +181,10 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
             <>
               <button
                 type="button"
-                onClick={() => setActiveFilters({ category: undefined, categories: undefined, is_free: undefined })}
+                onClick={() => {
+                  setActiveFilters({})
+                  setPage(1)
+                }}
                 className="text-xs font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-gray-700"
               >
                 Borrar filtros:
@@ -141,7 +222,10 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
           <input
             type="search"
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value)
+              setPage(1)
+            }}
             placeholder="Buscar eventos"
             className="rounded-full bg-slate-200 py-2 pl-4 pr-9 text-xs font-semibold uppercase tracking-wide text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-blue"
           />
@@ -160,6 +244,10 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
           {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className="h-64 animate-pulse rounded-xl bg-gray-200" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="mt-6 flex min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
+          No se pudieron cargar los eventos. Intenta de nuevo.
         </div>
       ) : visibleEvents.length === 0 ? (
         <div className="mt-6 flex min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
@@ -183,6 +271,34 @@ export default function EventsGrid({ events, isLoading }: EventsGridProps) {
             />
           ))}
         </div>
+      )}
+
+      {totalEvents > PAGE_SIZE && !isLoading && (
+        <nav className="mt-10 flex items-center justify-center gap-4" aria-label="Paginacion de eventos">
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+            disabled={page === 1}
+            aria-label="Pagina anterior"
+            title="Pagina anterior"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={16} aria-hidden="true" />
+          </button>
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Pagina {page} de {pageCount}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.min(pageCount, currentPage + 1))}
+            disabled={page === pageCount}
+            aria-label="Pagina siguiente"
+            title="Pagina siguiente"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
+        </nav>
       )}
     </section>
   )

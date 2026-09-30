@@ -7,6 +7,7 @@ import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
 
 type EventUiFilters = EventFilters & {
   categories?: EventCategory[]
+  datePeriod?: string
 }
 
 interface Props {
@@ -33,12 +34,13 @@ export default function FilterModal({ open, current, onApply, onClose }: Props) 
   const [selectedCategories, setSelectedCategories] = useState<EventCategory[]>(
     current.categories ?? (current.category ? [current.category] : [])
   )
-  const [selectedDate, setSelectedDate]         = useState<string | undefined>()
+  const [selectedDate, setSelectedDate]         = useState<string | undefined>(current.datePeriod)
   const [isFree, setIsFree]                     = useState<boolean | undefined>(current.is_free)
 
   useEffect(() => {
     if (!open) return
     setSelectedCategories(current.categories ?? (current.category ? [current.category] : []))
+    setSelectedDate(current.datePeriod)
     setIsFree(current.is_free)
   }, [open, current])
 
@@ -52,10 +54,9 @@ export default function FilterModal({ open, current, onApply, onClose }: Props) 
 
   const handleApply = () => {
     onApply({
-      category: undefined,
       categories: selectedCategories.length > 0 ? selectedCategories : undefined,
-      is_free:  isFree,
-      // Date filtering: when you wire the real API, convert selectedDate → date range params
+      datePeriod: selectedDate,
+      is_free: isFree,
     })
     onClose()
   }
@@ -64,7 +65,7 @@ export default function FilterModal({ open, current, onApply, onClose }: Props) 
     setSelectedCategories([])
     setSelectedDate(undefined)
     setIsFree(undefined)
-    onApply({ category: undefined, categories: undefined, is_free: undefined })
+    onApply({ categories: undefined, datePeriod: undefined, is_free: undefined })
     onClose()
   }
 

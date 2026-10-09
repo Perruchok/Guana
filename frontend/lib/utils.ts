@@ -57,21 +57,35 @@ export const EVENT_TAG_CLASSES: Record<EventCategory, string> = {
 }
 
 // ── Google Maps link builder ───────────────────
+// Prefers exact coordinates; falls back to a text search query only when
+// latitude/longitude are missing.
 
-export function mapsLink(venue: { name: string; address: string; city: string }): string {
-  const query = encodeURIComponent(`${venue.name}, ${venue.address}, ${venue.city}`)
+export function mapsLink(venue: {
+  name: string
+  address?: string | null
+  city?: string | null
+  latitude?: string | null
+  longitude?: string | null
+}): string {
+  if (venue.latitude && venue.longitude) {
+    return `https://www.google.com/maps/search/?api=1&query=${venue.latitude},${venue.longitude}`
+  }
+
+  const query = encodeURIComponent(
+    [venue.name, venue.address, venue.city].filter(Boolean).join(', ')
+  )
   return `https://www.google.com/maps/search/?api=1&query=${query}`
 }
 
-// ── Share helper ──────────────────────────────
+// ── Absolute URL builder ──────────────────────
+// Used in server-rendered metadata (generateMetadata) where `window` is
+// unavailable. Falls back to the production domain when the env var is unset.
 
-export async function shareEvent(title: string, url: string): Promise<void> {
-  if (navigator.share) {
-    await navigator.share({ title, url })
-  } else {
-    await navigator.clipboard.writeText(url)
-    alert('¡Enlace copiado al portapapeles!')
-  }
+export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
+
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://guanaknow.mx').replace(/\/$/, '')
+  return `${origin}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 // ── Price display ─────────────────────────────

@@ -155,7 +155,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative mx-6 mt-6 aspect-square w-auto overflow-hidden rounded-3xl md:mx-10 md:h-[600px] md:aspect-auto"
+      className="relative mx-0 aspect-square w-auto overflow-hidden rounded-none md:mx-10 md:aspect-auto md:h-[600px] md:rounded-3xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}

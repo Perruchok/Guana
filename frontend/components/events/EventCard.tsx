@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin } from 'lucide-react'
 import CategoryBadge from '@/components/ui/CategoryBadge'
+import { formatDateTime } from '@/lib/auth'
 
 interface EventCardProps {
   id: string
@@ -14,30 +15,7 @@ interface EventCardProps {
   slug: string
   isFree: boolean
   price: number
-  href?: string
-  onClick?: () => void
-}
-
-const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-
-function getDateParts(startDatetime: string): { day: string; month: string } {
-  const match = startDatetime.match(/^(\d{4})-(\d{2})-(\d{2})/)
-
-  if (!match) {
-    return { day: '--', month: '---' }
-  }
-
-  const [, , monthValue, dayValue] = match
-  const monthIndex = Number.parseInt(monthValue, 10) - 1
-
-  if (monthIndex < 0 || monthIndex >= MONTHS_ES.length) {
-    return { day: dayValue, month: '---' }
-  }
-
-  return {
-    day: String(Number.parseInt(dayValue, 10)),
-    month: MONTHS_ES[monthIndex],
-  }
+  href: string
 }
 
 export default function EventCard({
@@ -47,17 +25,15 @@ export default function EventCard({
   startDatetime,
   venueName,
   imageUrl,
-  slug,
   isFree,
   price,
   href,
-  onClick,
 }: EventCardProps) {
-  const { day, month } = getDateParts(startDatetime)
   const priceLabel = isFree ? 'Gratis' : `MXN ${price.toLocaleString('es-MX')}`
   const cardClassName = 'block h-full cursor-pointer overflow-hidden rounded-xl bg-brand-dark transition-transform duration-200 hover:scale-[1.02]'
-  const cardContent = (
-    <>
+
+  return (
+    <Link id={id} href={href} aria-label={`Ver evento ${title}`} className={cardClassName}>
       <div className="relative aspect-video bg-gray-800">
         {imageUrl ? (
           <Image
@@ -75,13 +51,10 @@ export default function EventCard({
           <CategoryBadge category={category} />
         </div>
 
-        <div className="absolute bottom-3 left-3 rounded bg-slate-800/80 px-2 py-1 text-white backdrop-blur">
-          <div className="text-lg font-bold leading-none">{day}</div>
-          <div className="text-xs uppercase leading-none">{month}</div>
-        </div>
       </div>
 
       <div className="p-3">
+        <p className="mb-1 text-xs font-medium text-slate-400">{formatDateTime(startDatetime)}</p>
         <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-white">{title}</h3>
 
         <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
@@ -96,25 +69,6 @@ export default function EventCard({
           <span className="text-xs text-brand-blue-light transition-colors hover:text-brand-blue">Ver mas »</span>
         </div>
       </div>
-    </>
-  )
-
-  if (href) {
-    return (
-      <Link id={id} href={href} aria-label={`Ver evento ${title}`} className={cardClassName}>
-        {cardContent}
-      </Link>
-    )
-  }
-
-  return (
-    <article
-      id={id}
-      onClick={onClick}
-      aria-label={`Ver evento ${title}`}
-      className={cardClassName}
-    >
-      {cardContent}
-    </article>
+    </Link>
   )
 }

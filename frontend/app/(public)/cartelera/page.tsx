@@ -1,6 +1,6 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
-import EventsGrid, { type Event as EventsGridEvent } from '@/components/events/EventsGrid'
+import EventsGrid from '@/components/events/EventsGrid'
 import { events } from '@/lib/api'
 import type { EventListItem } from '@/types'
 
@@ -9,7 +9,7 @@ export const metadata = {
   description: 'Explora los eventos culturales proximos en Guanajuato.',
 }
 
-async function getCarteleraEvents(): Promise<{ events: EventsGridEvent[]; total: number }> {
+async function getCarteleraEvents(): Promise<{ events: EventListItem[]; total: number }> {
   try {
     const result = await events.list(
       {
@@ -22,17 +22,7 @@ async function getCarteleraEvents(): Promise<{ events: EventsGridEvent[]; total:
     )
 
     return {
-      events: ((result.results ?? []) as EventListItem[]).map((event) => ({
-        id: event.id,
-        title: event.title,
-        category: event.category,
-        startDatetime: event.start_datetime,
-        venueName: event.venue_name,
-        imageUrl: event.image,
-        slug: event.slug,
-        isFree: event.is_free,
-        price: event.price,
-      })),
+      events: result.results ?? [],
       total: result.count,
     }
   } catch (error) {
@@ -48,16 +38,12 @@ export default async function CarteleraPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-brand-bg">
-        <div className="mx-auto max-w-6xl px-6 py-12 md:px-10 md:py-16">
-          <div className="mb-10 border-t border-slate-300 pt-6 text-center">
-            <h1 className="text-4xl font-extrabold uppercase italic tracking-tight text-brand-blue md:text-5xl">
-              Cartelera
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-4 md:px-10 md:pb-16">
+          <div className="mb-2 border-t border-slate-300 pt-3 md:mb-8 md:pt-6">
+            <h1 className="text-2xl font-extrabold uppercase italic tracking-tight text-brand-blue md:text-4xl">
+              Cartelera Cultural
             </h1>
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-tight text-slate-500 md:text-base">
-              Consulta la agenda cultural y abre el detalle completo de cada evento.
-            </p>
           </div>
-
           <EventsGrid initialEvents={initialResult.events} initialTotal={initialResult.total} />
         </div>
       </main>

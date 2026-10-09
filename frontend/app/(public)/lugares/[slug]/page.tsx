@@ -45,10 +45,10 @@ async function getVenueBySlug(slug: string): Promise<Venue | null> {
   }
 }
 
-async function getVenueEvents(venueId: string): Promise<Event[]> {
+async function getVenueEvents(venue: Venue): Promise<Event[]> {
   try {
     const res = await events.list({
-      venue: venueId,
+      venue: venue.id,
       status: 'published',
       ordering: 'start_datetime',
     }, null, { cache: 'no-store' })
@@ -57,9 +57,12 @@ async function getVenueEvents(venueId: string): Promise<Event[]> {
       ...item,
       owner: '',
       owner_name: item.owner_name || '',
-      venue: venueId,
-      venue_name: item.venue_name || '',
-      venue_slug: item.venue_slug || '',
+      venue: venue.id,
+      venue_name: item.venue_name || venue.name,
+      venue_slug: item.venue_slug || venue.slug,
+      venue_address: venue.address,
+      venue_latitude: venue.latitude,
+      venue_longitude: venue.longitude,
       description: '',
       end_datetime: '',
       capacity: null,
@@ -99,7 +102,7 @@ export default async function VenuePage({ params }: { params: { slug: string } }
 
   let venueEvents: Event[] = []
   try {
-    venueEvents = await getVenueEvents(venue.id)
+    venueEvents = await getVenueEvents(venue)
   } catch (e) {
     console.error('Error fetching venue events:', e)
   }

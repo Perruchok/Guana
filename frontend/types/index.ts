@@ -127,6 +127,9 @@ export interface Event {
   venue: string
   venue_name: string
   venue_slug: string
+  venue_address: string
+  venue_latitude: string | null
+  venue_longitude: string | null
   title: string
   slug: string
   description: string
@@ -187,7 +190,8 @@ export interface EventFilters {
   is_free?: boolean
   search?: string
   ordering?: string
-  page?: number  page_size?: number
+  page?: number  
+  page_size?: number
   start_date?: string
   end_date?: string
   venue?: string

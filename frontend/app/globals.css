@@ -8,3 +8,37 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid theme("colors.brand.blue");
+  outline-offset: 2px;
+}
+
+dialog:focus {
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  .sheet-slide-up {
+    animation: sheet-slide-up 220ms ease-out;
+  }
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-slide-up {
+    animation: none;
+  }
+}

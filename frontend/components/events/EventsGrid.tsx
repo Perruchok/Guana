@@ -1,116 +1,49 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import EventCard from '@/components/events/EventCard'
-import FilterModal from '@/components/events/FilterModal'
-import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
+import { useEffect, useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react'
+import AdvancedFiltersSheet from '@/components/events/AdvancedFiltersSheet'
+import EventRow from '@/components/events/EventRow'
+import FilterChips from '@/components/events/FilterChips'
+import { useEventFilterState } from '@/hooks/useEventFilterState'
+import { getEventDateGroupLabel, getEventDateKey, toEventApiFilters } from '@/lib/event-filters'
 import { events as eventsApi } from '@/lib/api'
-import type { EventCategory, EventFilters, EventListItem } from '@/types'
-
-export interface Event {
-  id: string
-  title: string
-  category: EventCategory
-  startDatetime: string
-  venueName: string
-  imageUrl: string | null
-  slug: string
-  isFree: boolean
-  price: number
-}
-
-type EventUiFilters = EventFilters & {
-  categories?: EventCategory[]
-  datePeriod?: string
-}
-
-const FILTER_DOT_CLASSES: Record<EventCategory, string> = {
-  music: 'bg-blue-600',
-  performance: 'bg-rose-600',
-  cinema: 'bg-red-600',
-  workshop: 'bg-teal-600',
-  exhibition: 'bg-violet-600',
-  dance: 'bg-pink-600',
-  art: 'bg-orange-500',
-  literature: 'bg-amber-600',
-  festival: 'bg-green-600',
-  conference: 'bg-indigo-600',
-  theater: 'bg-brand-slate',
-  other: 'bg-brand-slate',
-}
+import type { EventListItem } from '@/types'
 
 interface EventsGridProps {
-  initialEvents: Event[]
+  initialEvents: EventListItem[]
   initialTotal: number
 }
 
 const PAGE_SIZE = 12
 
-function toGridEvent(event: EventListItem): Event {
-  return {
-    id: event.id,
-    title: event.title,
-    category: event.category,
-    startDatetime: event.start_datetime,
-    venueName: event.venue_name,
-    imageUrl: event.image,
-    slug: event.slug,
-    isFree: event.is_free,
-    price: event.price,
-  }
-}
-
-function getDateRange(datePeriod?: string) {
-  if (!datePeriod) return {}
-
-  const today = new Date()
-  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const endDate = new Date(startDate)
-  const formatDate = (date: Date) => date.toISOString().slice(0, 10)
-
-  if (datePeriod === 'tomorrow') {
-    startDate.setDate(startDate.getDate() + 1)
-    endDate.setTime(startDate.getTime())
-  } else if (datePeriod === 'week') {
-    endDate.setDate(endDate.getDate() + 6)
-  } else if (datePeriod === 'weekend') {
-    const daysUntilSaturday = (6 - startDate.getDay() + 7) % 7
-    startDate.setDate(startDate.getDate() + daysUntilSaturday)
-    endDate.setDate(startDate.getDate() + 1)
-  }
-
-  return { start_date: formatDate(startDate), end_date: formatDate(endDate) }
-}
-
 export default function EventsGrid({ initialEvents, initialTotal }: EventsGridProps) {
-  const [searchQuery, setSearchQuery] = useState('')
+  const { filters, updateFilters } = useEventFilterState()
   const [filterOpen, setFilterOpen] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<EventUiFilters>({})
   const [events, setEvents] = useState(initialEvents)
   const [totalEvents, setTotalEvents] = useState(initialTotal)
-  const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
 
-  const normalizedQuery = searchQuery.trim().toLowerCase()
-  const selectedCategories = activeFilters.categories ?? []
-  const pageCount = Math.max(1, Math.ceil(totalEvents / PAGE_SIZE))
-  const apiFilters: EventFilters & { categories?: string } = {
+  const apiFilters = toEventApiFilters(filters, PAGE_SIZE)
+  const requestKey = JSON.stringify(apiFilters)
+  const initialRequestKey = JSON.stringify({
     status: 'published',
     ordering: 'start_datetime',
-    page,
+    page: 1,
     page_size: PAGE_SIZE,
-    search: normalizedQuery || undefined,
-    categories: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
-    is_free: activeFilters.is_free,
-    ...getDateRange(activeFilters.datePeriod),
-  }
-  const requestKey = JSON.stringify(apiFilters)
-  const initialRequestKey = useRef(JSON.stringify({ status: 'published', ordering: 'start_datetime', page: 1, page_size: PAGE_SIZE }))
+    search: undefined,
+    categories: undefined,
+    is_free: undefined,
+  })
 
   useEffect(() => {
-    if (requestKey === initialRequestKey.current) return
+    if (requestKey === initialRequestKey) {
+      setEvents(initialEvents)
+      setTotalEvents(initialTotal)
+      setLoadError(false)
+      return
+    }
 
     let cancelled = false
     setIsLoading(true)
@@ -119,7 +52,7 @@ export default function EventsGrid({ initialEvents, initialTotal }: EventsGridPr
     eventsApi.list(apiFilters)
       .then((result) => {
         if (cancelled) return
-        setEvents(result.results.map(toGridEvent))
+        setEvents(result.results)
         setTotalEvents(result.count)
       })
       .catch(() => {
@@ -132,169 +65,121 @@ export default function EventsGrid({ initialEvents, initialTotal }: EventsGridPr
     return () => {
       cancelled = true
     }
-  }, [requestKey])
+  }, [requestKey, initialEvents, initialTotal])
 
-  const visibleEvents = events.filter((event) => {
-    const matchesSearch =
-      normalizedQuery.length === 0 ||
-      event.title.toLowerCase().includes(normalizedQuery) ||
-      event.venueName.toLowerCase().includes(normalizedQuery) ||
-      event.category.toLowerCase().includes(normalizedQuery)
-
-    return matchesSearch
-  })
-
-  const handleApplyFilters = (filters: EventUiFilters) => {
-    setActiveFilters(filters)
-    setPage(1)
-  }
-
-  const removeCategoryFilter = (filterToRemove: EventCategory) => {
-    const remainingCategories = selectedCategories.filter((filterValue) => filterValue !== filterToRemove)
-    setActiveFilters((currentFilters) => ({
-      ...currentFilters,
-      categories: remainingCategories.length > 0 ? remainingCategories : undefined,
-    }))
-    setPage(1)
-  }
-
-  const activeFilterCount = selectedCategories.length + (activeFilters.is_free ? 1 : 0) + (activeFilters.datePeriod ? 1 : 0)
+  const pageCount = Math.max(1, Math.ceil(totalEvents / PAGE_SIZE))
+  const groupedEvents = useMemo(() => {
+    const sorted = [...events].sort((first, second) =>
+      new Date(first.start_datetime).getTime() - new Date(second.start_datetime).getTime()
+    )
+    const groups = new Map<string, EventListItem[]>()
+    sorted.forEach((event) => {
+      const dateKey = getEventDateKey(event.start_datetime)
+      groups.set(dateKey, [...(groups.get(dateKey) ?? []), event])
+    })
+    return [...groups.entries()]
+  }, [events])
 
   return (
     <section>
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-2xl font-bold text-slate-900">Eventos</h2>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
-          <button
-            type="button"
-            onClick={() => setFilterOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-blue-light"
-          >
-            Filtrar por
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-
-          {activeFilterCount > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveFilters({})
-                  setPage(1)
-                }}
-                className="text-xs font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-gray-700"
-              >
-                Borrar filtros:
-              </button>
-
-              <div className="flex flex-wrap gap-2">
-                {selectedCategories.map((filterValue) => (
-                  <button
-                    key={filterValue}
-                    type="button"
-                    onClick={() => removeCategoryFilter(filterValue)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:border-slate-400 hover:text-gray-700"
-                  >
-                    <span className={`h-3 w-3 rounded-full ${FILTER_DOT_CLASSES[filterValue]}`} aria-hidden="true" />
-                    <span>{EVENT_CATEGORY_LABELS[filterValue]}</span>
-                    <span aria-hidden="true">×</span>
-                  </button>
-                ))}
-
-                {activeFilters.is_free && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilters((currentFilters) => ({ ...currentFilters, is_free: undefined }))}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:border-slate-400 hover:text-gray-700"
-                  >
-                    <span className="h-3 w-3 rounded-full bg-brand-yellow" aria-hidden="true" />
-                    <span>Gratis</span>
-                    <span aria-hidden="true">×</span>
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-
+      <div className="mb-2 flex items-center gap-2">
+        <label className="relative min-w-0 flex-1">
+          <span className="sr-only">Buscar eventos</span>
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true" />
           <input
             type="search"
-            value={searchQuery}
+            value={filters.searchQuery}
             onChange={(event) => {
-              setSearchQuery(event.target.value)
-              setPage(1)
+              updateFilters({ ...filters, searchQuery: event.target.value, page: 1 }, 'replace')
             }}
             placeholder="Buscar eventos"
-            className="rounded-full bg-slate-200 py-2 pl-4 pr-9 text-xs font-semibold uppercase tracking-wide text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+            className="h-11 w-full rounded-full bg-slate-200 pl-10 pr-3 text-sm text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-blue"
           />
-        </div>
+        </label>
+        <button
+          type="button"
+          title="Filtros avanzados"
+          aria-label="Abrir filtros avanzados"
+          onClick={() => setFilterOpen(true)}
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-brand-blue px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-blue-light"
+        >
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          <span>Filtros</span>
+        </button>
       </div>
 
-      <FilterModal
+      <div className="mb-2">
+        <FilterChips
+          filters={filters}
+          onChange={(nextFilters) => updateFilters(nextFilters)}
+        />
+      </div>
+
+      <AdvancedFiltersSheet
         open={filterOpen}
-        current={activeFilters}
-        onApply={handleApplyFilters}
+        current={filters}
+        onApply={(nextFilters) => updateFilters(nextFilters)}
         onClose={() => setFilterOpen(false)}
       />
 
       {isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="divide-y divide-slate-200">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="h-64 animate-pulse rounded-xl bg-gray-200" />
+            <div key={index} className="flex min-h-24 items-center gap-3" aria-hidden="true">
+              <div className="h-24 w-24 shrink-0 animate-pulse rounded-md bg-slate-200" />
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="h-3 w-1/3 animate-pulse rounded-full bg-slate-200" />
+                <div className="h-4 w-3/4 animate-pulse rounded-full bg-slate-200" />
+                <div className="h-3 w-1/2 animate-pulse rounded-full bg-slate-200" />
+              </div>
+            </div>
           ))}
         </div>
       ) : loadError ? (
-        <div className="mt-6 flex min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
+        <div className="flex min-h-40 items-center justify-center border-y border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
           No se pudieron cargar los eventos. Intenta de nuevo.
         </div>
-      ) : visibleEvents.length === 0 ? (
-        <div className="mt-6 flex min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
+      ) : events.length === 0 ? (
+        <div className="flex min-h-40 items-center justify-center border-y border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
           No hay eventos disponibles
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              id={event.id}
-              title={event.title}
-              category={event.category}
-              startDatetime={event.startDatetime}
-              venueName={event.venueName}
-              imageUrl={event.imageUrl}
-              slug={event.slug}
-              isFree={event.isFree}
-              price={event.price}
-              href={`/eventos/${event.slug}`}
-            />
+        <div>
+          {groupedEvents.map(([dateKey, dayEvents]) => (
+            <section key={dateKey} aria-label={getEventDateGroupLabel(dateKey)}>
+              <h2 className="sticky top-20 z-10 bg-brand-bg py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {getEventDateGroupLabel(dateKey)}
+              </h2>
+              <div>
+                {dayEvents.map((event) => <EventRow key={event.id} event={event} />)}
+              </div>
+            </section>
           ))}
         </div>
       )}
 
       {totalEvents > PAGE_SIZE && !isLoading && (
-        <nav className="mt-10 flex items-center justify-center gap-4" aria-label="Paginacion de eventos">
+        <nav className="flex items-center justify-center gap-4 py-4" aria-label="Paginación de eventos">
           <button
             type="button"
-            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
-            disabled={page === 1}
+            onClick={() => updateFilters({ ...filters, page: Math.max(1, filters.page - 1) })}
+            disabled={filters.page === 1}
             aria-label="Pagina anterior"
             title="Pagina anterior"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft size={16} aria-hidden="true" />
           </button>
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Pagina {page} de {pageCount}
+            Página {filters.page} de {pageCount}
           </span>
           <button
             type="button"
-            onClick={() => setPage((currentPage) => Math.min(pageCount, currentPage + 1))}
-            disabled={page === pageCount}
+            onClick={() => updateFilters({ ...filters, page: Math.min(pageCount, filters.page + 1) })}
+            disabled={filters.page === pageCount}
             aria-label="Pagina siguiente"
             title="Pagina siguiente"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight size={16} aria-hidden="true" />
           </button>

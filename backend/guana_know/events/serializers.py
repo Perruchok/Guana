@@ -23,6 +23,26 @@ class EventSerializer(serializers.ModelSerializer):
         source='venue.slug',
         read_only=True
     )
+    venue_address = serializers.CharField(
+        source='venue.address',
+        read_only=True
+    )
+    venue_latitude = serializers.DecimalField(
+        source='venue.latitude',
+        max_digits=9,
+        decimal_places=6,
+        coerce_to_string=True,
+        allow_null=True,
+        read_only=True,
+    )
+    venue_longitude = serializers.DecimalField(
+        source='venue.longitude',
+        max_digits=9,
+        decimal_places=6,
+        coerce_to_string=True,
+        allow_null=True,
+        read_only=True,
+    )
     is_upcoming = serializers.SerializerMethodField()
     is_ongoing = serializers.SerializerMethodField()
     is_past = serializers.SerializerMethodField()
@@ -36,6 +56,9 @@ class EventSerializer(serializers.ModelSerializer):
             'venue',
             'venue_name',
             'venue_slug',
+            'venue_address',
+            'venue_latitude',
+            'venue_longitude',
             'title',
             'slug',
             'description',

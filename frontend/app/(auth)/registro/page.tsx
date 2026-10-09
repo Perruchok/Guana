@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { auth } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
@@ -80,8 +81,8 @@ export default function RegistroPage() {
   return (
     <div className="min-h-screen bg-brand-bg px-4 py-12">
       <div className="max-w-lg mx-auto">
-        <Link href="/" className="font-extrabold tracking-tight text-2xl text-gray-900 block mb-10">
-          Guana<span className="text-brand-blue-light">·</span>
+        <Link href="/" aria-label="Inicio" className="mb-10 flex">
+          <Image src="/ICON/SVG/logo-icon-mob.svg" alt="Guana Gou" width={168} height={64} className="h-12 w-auto" priority />
         </Link>
 
         {step === 'tipo' && (

@@ -151,21 +151,31 @@ Use only these values. Do not invent intermediate values.
 ### EventCard
 - Background: `bg-brand-dark` (`#111827`)
 - Border radius: `rounded-xl`
-- **Behaviour: onClick opens EventModal — does NOT navigate to /eventos/slug**
+- **Behaviour: navigates to `/eventos/[slug]` via `<Link href>` — see Approved Override #1 below**
 - Image: Next.js `<Image>` fill + objectFit cover, aspect-video
 - On hover: `scale-[1.02] transition-transform duration-200`
-- The card receives an `onClick: () => void` prop — the parent (EventsGrid) 
-  manages which event is selected and passes it to EventModal
+- The card requires an `href` and always navigates via `<Link>`
 
-### EventModal
-- Triggered by EventCard click, managed in EventsGrid via selectedEvent state
-- Background: `bg-brand-dark` with `bg-brand-navy` header area
-- Text: `text-white` on dark surfaces
-- Two action buttons:
-  - Primary: `bg-brand-blue hover:bg-brand-blue-light text-white rounded-lg px-4 py-2`
-  - Secondary: `border border-slate-600 text-slate-300 hover:text-white rounded-lg px-4 py-2`
-- Close button: top-right, `text-slate-400 hover:text-white`
-- CategoryBadge rendered inside the modal header
+### EventDetail (replaces EventModal — see Approved Override #1)
+- Single component rendered identically by the full page (`/eventos/[slug]`) and
+  the intercepted modal (`@modal/(.)eventos/[slug]`, wrapped in `Sheet`)
+- Flex column: top bar (Close/Back left, Compartir right; no title) → scroll area
+  (`flex-1 min-h-0 overflow-y-auto overscroll-contain`) → action bar. Only the
+  scroll area scrolls; safe-area insets are respected top and bottom
+- Scroll area order: image (`h-[40dvh] max-h-[45dvh]`, `object-contain` over a
+  blurred `object-cover` copy — never cropped) → category badge + price chip →
+  title → icon info rows (date/time with trailing "Agregar al calendario" icon
+  button, venue, entrada) → description (`line-clamp-4` + "Leer más")
+- Action bar: `Cómo llegar` is always present. With `registration_url`: two
+  equal-width buttons, `Registrarme` (filled) + `Cómo llegar` (outlined);
+  otherwise `Cómo llegar` alone, full width, filled. Both open in a new tab
+- `Sheet` has `variant`: `bottom` (filters, share) and `fullscreen` (event
+  detail: `fixed inset-0 h-dvh` with slide-up on mobile, centered `max-w-lg`
+  dialog at md+). Scroll lock is ref-counted and released on unmount
+- Focus: `:focus-visible` only; the dialog container (`tabIndex -1`) receives
+  focus on open
+- The venue row (`MapPin` icon, links to `/lugares/[venue_slug]`) is the only
+  venue link — do not add a second "Ver lugar" button
 
 ### EventsGrid + FilterModal
 - Controls row order: `Filtrar por` button → `Borrar filtros:` label (if active) → active filter badges → search input
@@ -256,14 +266,34 @@ body {
 
 ---
 
-## 8. Rules — What NOT to Do
+## 8. Approved Overrides
+
+Documented, intentional exceptions to rules elsewhere in this file. An override
+entry wins over its corresponding rule.
+
+### Override #1 — EventCard/EventRow navigate instead of opening EventModal
+- **Supersedes**: the former "Never navigate on EventCard click — always open
+  EventModal" rule and the original EventCard/EventModal specs in section 6.
+- **Why**: event detail needs a real, shareable, crawlable URL
+  (`/eventos/[slug]`) for WhatsApp link previews and SEO. `EventModal` could
+  not provide that.
+- **What changed**: `EventCard` and `EventRow` now render `<Link href="/eventos/[slug]">`.
+  A new `<EventDetail>` component (see section 6) renders the same layout for
+  both:
+  - the full page `app/(public)/eventos/[slug]/page.tsx`
+  - the intercepted route `app/(public)/@modal/(.)eventos/[slug]/page.tsx`,
+    wrapped in the existing `Sheet` component, so in-app navigation still
+    feels like a modal while direct links/shares load the full page.
+- `EventModal.tsx` is retired; do not reintroduce it.
+
+## 9. Rules — What NOT to Do
 
 1. **Never use old color tokens**: cream, ink, terracota, gold, sage, stone, pale, border
    in new components. They exist in tailwind.config.js only for backward compat.
 2. **Never construct Tailwind classes dynamically**: 
    - WRONG: `` `bg-${color}-600` ``
    - RIGHT: full class string in a lookup object
-3. **Never navigate on EventCard click** — always open EventModal
+3. **Never open EventModal** — it is retired; navigate via `<Link href="/eventos/[slug]">` (Approved Override #1)
 4. **Never duplicate layout sections** in Footer
 5. **Never remove the Directorio nav link** from Navbar
 6. **Never use font-display or font-mono** in new components (legacy tokens)
@@ -271,31 +301,42 @@ body {
 
 ---
 
-## 9. File Locations
+## 10. File Locations
 
 ```
 frontend/
 ├── app/
 │   ├── globals.css          ← must exist, sets body bg + base styles
-│   └── layout.tsx           ← root layout, applies bg-brand-bg to <body>
+│   ├── layout.tsx           ← root layout, applies bg-brand-bg to <body>
+│   └── (public)/
+│       ├── layout.tsx       ← renders {children} + {modal} slot
+│       ├── @modal/
+│       │   ├── default.tsx              ← returns null
+│       │   └── (.)eventos/[slug]/
+│       │       ├── page.tsx             ← fetches event, renders EventDetailModal
+│       │       └── loading.tsx          ← instant skeleton inside Sheet
+│       └── eventos/[slug]/page.tsx      ← full page, renders EventDetail
 ├── components/
 │   ├── events/
-│   │   ├── EventCard.tsx    ← onClick opens modal, no navigation
-│   │   ├── EventModal.tsx   ← receives event prop + onClose
-│   │   └── FilterModal.tsx  ← light bg, brand-blue apply button
+│   │   ├── EventCard.tsx         ← `href` navigates to /eventos/[slug]
+│   │   ├── EventDetail.tsx       ← shared layout (see Approved Override #1)
+│   │   ├── EventDetailModal.tsx  ← Sheet wrapper for the intercepted route
+│   │   ├── ShareSheet.tsx        ← fallback share options (WhatsApp, copy link)
+│   │   └── AdvancedFiltersSheet.tsx ← light bg, brand-blue apply button
 │   ├── layout/
 │   │   ├── Navbar.tsx       ← brand-navy bg, auth icon, directorio link
 │   │   └── Footer.tsx       ← brand-navy, 4 cols, no duplicate contact
 │   ├── sections/
 │   │   └── HeroCarousel.tsx ← full-bleed image, 10% text margin
 │   └── ui/
-│       └── CategoryBadge.tsx ← lookup object, full class strings
-└── DESIGN_SYSTEM.md         ← this file
+│       ├── CategoryBadge.tsx ← lookup object, full class strings
+│       └── Sheet.tsx         ← shared bottom-sheet/dialog used by filters and event detail
+└── DESIGN-SYSTEM.md          ← this file
 ```
 
 ---
 
-## 10. tailwind.config.js (canonical version)
+## 11. tailwind.config.js (canonical version)
 
 ```js
 /** @type {import('tailwindcss').Config} */

@@ -134,6 +134,13 @@ export const events = {
     return res.results[0]
   },
 
+  /** Resolves slug → id via the list endpoint, then fetches the full detail. */
+  getDetailBySlug: async (slug: string, fetchOptions: RequestInit = {}): Promise<Event | null> => {
+    const listItem = await events.getBySlug(slug, fetchOptions)
+    if (!listItem) return null
+    return events.get(listItem.id, fetchOptions)
+  },
+
   /** POST /events/ — auth required */
   create: (token: string, data: Partial<Event>) =>
     apiFetch<Event>('/events/', {

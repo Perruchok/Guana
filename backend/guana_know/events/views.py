@@ -78,7 +78,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if end_date:
             queryset = queryset.filter(start_datetime__date__lte=end_date)
 
-        return queryset
+        return queryset.select_related('venue')
     
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

@@ -1,3 +1,6 @@
+from datetime import datetime, time
+from zoneinfo import ZoneInfo
+
 import pytest
 from dateutil.parser import isoparse
 from django.utils import timezone
@@ -81,6 +84,30 @@ class TestEventViews:
             str(festival_event.id),
         }
 
+    def test_list_date_range_uses_inclusive_mexico_city_dates(self, api_client):
+        mexico_city = ZoneInfo('America/Mexico_City')
+        event_date = timezone.localdate() + timezone.timedelta(days=30)
+        late_event = EventFactory(
+            status='published',
+            start_datetime=timezone.make_aware(
+                datetime.combine(event_date, time(23, 30)), mexico_city
+            ),
+        )
+        next_day_event = EventFactory(
+            status='published',
+            start_datetime=timezone.make_aware(
+                datetime.combine(event_date + timezone.timedelta(days=1), time(0, 30)),
+                mexico_city,
+            ),
+        )
+
+        response = api_client.get(
+            f'/api/events/?start_date={event_date}&end_date={event_date}'
+        )
+
+        assert response.status_code == 200
+        assert [event['id'] for event in response.json()['results']] == [str(late_event.id)]
+
     def test_get_unauthenticated_returns_only_published(self, api_client):
         # create one published and one draft event
         EventFactory(status='published')
@@ -112,6 +139,31 @@ class TestEventViews:
         data = resp.json()
         ids = [str(ev['id']) for ev in data['results']]
         assert ids == [str(matching_event.id)]
+
+    def test_detail_payload_includes_venue_address_and_coordinates(self, api_client):
+        venue = VenueFactory(
+            address='Calle de prueba 123',
+            latitude='21.123456',
+            longitude='-101.654321',
+        )
+        event = EventFactory(status='published', venue=venue)
+
+        response = api_client.get(f'/api/events/{event.id}/')
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data['venue_address'] == 'Calle de prueba 123'
+        assert data['venue_latitude'] == '21.123456'
+        assert data['venue_longitude'] == '-101.654321'
+
+    def test_list_payload_does_not_include_venue_detail_fields(self, api_client):
+        event = EventFactory(status='published')
+
+        response = api_client.get(f'/api/events/?slug={event.slug}')
+
+        assert response.status_code == 200
+        data = response.json()['results'][0]
+        assert {'venue_address', 'venue_latitude', 'venue_longitude'}.isdisjoint(data)
 
     def test_post_unauthenticated_returns_401(self, api_client):
         resp = api_client.post('/api/events/', {}, format='json')

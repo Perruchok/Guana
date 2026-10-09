@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { auth } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
@@ -39,8 +40,8 @@ export default function EntrarPage() {
   return (
     <div className="min-h-screen bg-brand-bg px-4 py-12 flex items-center justify-center">
       <div className="max-w-sm w-full">
-        <Link href="/" className="font-extrabold tracking-tight text-2xl text-gray-900 block mb-10 text-center">
-          Guana<span className="text-brand-blue-light">·</span>
+        <Link href="/" aria-label="Inicio" className="mb-10 flex justify-center">
+          <Image src="/ICON/SVG/logo-icon-mob.svg" alt="Guana Gou" width={168} height={64} className="h-12 w-auto" priority />
         </Link>
 
         <h1 className="font-bold tracking-tight text-2xl text-center mb-1">Entrar</h1>

@@ -113,10 +113,11 @@ All custom events must follow this naming convention: `noun_verb` in snake_case.
 
 | Signal | Event Name | Required Params |
 |---|---|---|
-| User views an event detail page | `event_view` | `event_id`, `event_title`, `category`, `venue_id`, `is_free` |
+| User views an event detail page | `event_view` | `event_id`, `event_title`, `category`, `venue_id`, `is_free`. Also send `surface: 'modal' \| 'page'` to distinguish the intercepted sheet from the full page. |
 | User clicks "Get Directions" | `directions_click` | `event_id`, `venue_id`, `venue_name` |
 | User clicks registration/ticket link | `registration_click` | `event_id`, `is_free`, `price` |
 | User clicks to share an event | `event_share` | `event_id`, `share_method` |
+| User adds an event to their calendar (.ics download) | `calendar_add` | `event_id` |
 
 #### Venue Page
 

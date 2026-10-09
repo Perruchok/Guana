@@ -1,16 +1,20 @@
 'use client'
 // app/(public)/HomeClient.tsx
-// Handles all interactivity: slider, filter modal, event modal.
+// Handles all interactivity: hero slider and quick/advanced event filters.
+// Event cards navigate to /eventos/[slug], which opens as a modal via the
+// @modal intercepted route when linked to from here.
 
-import { useRef, useState } from 'react'
-import type { Event, EventCategory, EventListItem, VenueListItem, EventFilters } from '@/types'
+import { useEffect, useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
+import type { EventListItem, VenueListItem } from '@/types'
 import EventCard from '@/components/events/EventCard'
-import EventModal from '@/components/events/EventModal'
 import HeroCarousel, { type HeroSlide } from '@/components/sections/HeroCarousel'
-import FilterModal from '@/components/events/FilterModal'
+import AdvancedFiltersSheet from '@/components/events/AdvancedFiltersSheet'
+import FilterChips from '@/components/events/FilterChips'
+import { useEventFilterState } from '@/hooks/useEventFilterState'
 import { events as eventsApi } from '@/lib/api'
+import { toEventApiFilters } from '@/lib/event-filters'
 import Link from 'next/link'
-import { EVENT_CATEGORY_LABELS } from '@/lib/utils'
 
 interface Props {
   featuredEvents: EventListItem[]
@@ -26,152 +30,41 @@ function sortEventsBySoonest(events: EventListItem[]): EventListItem[] {
   })
 }
 
-const FILTER_DOT_CLASSES: Record<string, string> = {
-  music: 'bg-blue-600',
-  performance: 'bg-rose-600',
-  cinema: 'bg-red-600',
-  workshop: 'bg-teal-600',
-  exhibition: 'bg-violet-600',
-  dance: 'bg-pink-600',
-  art: 'bg-orange-500',
-  literature: 'bg-amber-600',
-  festival: 'bg-green-600',
-  conference: 'bg-indigo-600',
-  theater: 'bg-brand-slate',
-  other: 'bg-brand-slate',
-}
-
-type EventUiFilters = EventFilters & {
-  categories?: EventCategory[]
-}
-
 export default function HomeClient({ featuredEvents, recentEvents, featuredVenues }: Props) {
-  // Filter state
+  const { filters, updateFilters } = useEventFilterState()
   const [filterOpen, setFilterOpen]     = useState(false)
-  const [activeFilters, setActiveFilters] = useState<EventUiFilters>({})
   const [filteredEvents, setFilteredEvents] = useState<EventListItem[]>(sortEventsBySoonest(recentEvents))
   const [loadingEvents, setLoadingEvents]   = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
-  const pendingDetailEventIdRef = useRef<string | null>(null)
 
-  const toModalEvent = (event: EventListItem): Event => ({
-    ...(event as EventListItem & { description?: string; end_datetime?: string }),
-    id: event.id,
-    owner: '',
-    owner_name: event.owner_name,
-    venue: '',
-    venue_name: event.venue_name,
-    venue_slug: event.venue_slug,
-    title: event.title,
-    slug: event.slug,
-    description: (event as EventListItem & { description?: string }).description ?? '',
-    category: event.category,
-    image: event.image,
-    start_datetime: event.start_datetime,
-    end_datetime:
-      (event as EventListItem & { end_datetime?: string }).end_datetime ?? event.start_datetime,
-    capacity: null,
-    registered_count: 0,
-    price: event.price,
-    is_free: event.is_free,
-    registration_url: null,
-    status: 'published',
-    is_featured: event.is_featured,
-    is_upcoming: true,
-    is_ongoing: false,
-    is_past: false,
-    created_at: '',
-    updated_at: '',
-  })
+  const filterKey = JSON.stringify(filters)
 
-  const handleOpenEventModal = async (event: EventListItem) => {
-    // Open instantly with list data, then hydrate with full detail (description, etc.)
-    setSelectedEvent(toModalEvent(event))
-
-    // When list payload already includes description, no extra round-trip is required.
-    if (event.description?.trim()) {
-      pendingDetailEventIdRef.current = null
+  useEffect(() => {
+    const hasFilters = Boolean(
+      filters.categories.length || filters.datePeriod || filters.is_free || filters.searchQuery.trim()
+    )
+    if (!hasFilters) {
+      setFilteredEvents(sortEventsBySoonest(recentEvents))
+      setLoadingEvents(false)
       return
     }
 
-    pendingDetailEventIdRef.current = event.id
-    try {
-      const detailedEvent = await eventsApi.get(event.id)
-      setSelectedEvent((current) => {
-        if (!current || current.id !== event.id || pendingDetailEventIdRef.current !== event.id) {
-          return current
-        }
-        return detailedEvent
-      })
-    } catch {
-      // Keep fallback list data if detail fetch fails
-    } finally {
-      if (pendingDetailEventIdRef.current === event.id) {
-        pendingDetailEventIdRef.current = null
-      }
-    }
-  }
-
-  // ── Filter ──────────────────────────────────
-  const handleApplyFilters = async (filters: EventUiFilters) => {
-    setActiveFilters(filters)
+    let cancelled = false
     setLoadingEvents(true)
-    try {
-      const apiFilters: EventFilters = {
-        ...filters,
-        category:
-          filters.categories && filters.categories.length === 1
-            ? filters.categories[0]
-            : undefined,
-      }
-      const res = await eventsApi.list(apiFilters)
-      const eventsAfterCategoryFilter =
-        filters.categories && filters.categories.length > 0
-          ? res.results.filter((event) => filters.categories?.includes(event.category))
-          : res.results
+    eventsApi.list(toEventApiFilters(filters))
+      .then((result) => {
+        if (!cancelled) setFilteredEvents(sortEventsBySoonest(result.results))
+      })
+      .catch(() => {
+        if (!cancelled) setFilteredEvents(sortEventsBySoonest(recentEvents))
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEvents(false)
+      })
 
-      setFilteredEvents(sortEventsBySoonest(eventsAfterCategoryFilter))
-    } catch {
-      setFilteredEvents(sortEventsBySoonest(recentEvents))
-    } finally {
-      setLoadingEvents(false)
+    return () => {
+      cancelled = true
     }
-  }
-
-  const activeFilterCount =
-    (activeFilters.categories?.length ?? 0) +
-    (activeFilters.is_free ? 1 : 0)
-
-  const appliedFilterBadges: Array<{ key: string; label: string; dotClass: string; onRemove: () => void }> = []
-
-  const selectedCategories = activeFilters.categories ?? (activeFilters.category ? [activeFilters.category] : [])
-
-  selectedCategories.forEach((category) => {
-    appliedFilterBadges.push({
-      key: `category:${category}`,
-      label: EVENT_CATEGORY_LABELS[category],
-      dotClass: FILTER_DOT_CLASSES[category] ?? 'bg-brand-slate',
-      onRemove: () => {
-        const remainingCategories = selectedCategories.filter((value) => value !== category)
-        void handleApplyFilters({
-          ...activeFilters,
-          category: undefined,
-          categories: remainingCategories.length > 0 ? remainingCategories : undefined,
-        })
-      },
-    })
-  })
-
-  if (activeFilters.is_free) {
-    appliedFilterBadges.push({
-      key: 'is_free',
-      label: 'Gratis',
-      dotClass: 'bg-brand-yellow',
-      onRemove: () => {
-        void handleApplyFilters({ ...activeFilters, is_free: undefined })
-      },
-    })
-  }
+  }, [filterKey, recentEvents])
 
   const presentationHeroSlide: HeroSlide = {
     kind: 'ad',
@@ -247,57 +140,24 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
       </section>
 
       {/* ── Eventos grid ── */}
-      <section id="eventos" className="px-6 md:px-10 py-10 border-t border-border">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            {/* <p className="label mb-1">Agenda</p>
-            <h2 className="font-display font-bold text-2xl tracking-tight">Eventos</h2> */}
+      <section id="eventos" className="border-t border-slate-300 px-4 py-8 md:px-10 md:py-10">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <FilterChips
+              filters={filters}
+              onChange={(nextFilters) => updateFilters(nextFilters)}
+            />
           </div>
-        </div>
-
-        <div className="mb-8 flex flex-wrap items-center gap-3">
           <button
+            type="button"
+            title="Filtros avanzados"
+            aria-label="Abrir filtros avanzados"
             onClick={() => setFilterOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-blue-light"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-brand-blue px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-blue-light"
           >
-            Filtrar por
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            <span>Filtros</span>
           </button>
-
-          {activeFilterCount > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  void handleApplyFilters({
-                    category: undefined,
-                    categories: undefined,
-                    is_free: undefined,
-                  })
-                }}
-                className="text-xs font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-gray-700"
-              >
-                Borrar filtros:
-              </button>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {appliedFilterBadges.map((badge) => (
-                  <button
-                    key={badge.key}
-                    type="button"
-                    onClick={badge.onRemove}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:border-slate-400 hover:text-gray-700"
-                  >
-                    <span className={`h-3 w-3 rounded-full ${badge.dotClass}`} aria-hidden="true" />
-                    <span>{badge.label}</span>
-                    <span aria-hidden="true">×</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
         </div>
 
         {loadingEvents ? (
@@ -332,7 +192,7 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
                 slug={event.slug}
                 isFree={event.is_free}
                 price={event.price}
-                onClick={() => { void handleOpenEventModal(event) }}
+                href={`/eventos/${event.slug}`}
               />
             ))}
           </div>
@@ -368,20 +228,12 @@ export default function HomeClient({ featuredEvents, recentEvents, featuredVenue
         </div>
       </section>
 
-      {/* ── Modals ── */}
-      <FilterModal
+      {/* ── Filters sheet ── */}
+      <AdvancedFiltersSheet
         open={filterOpen}
-        current={activeFilters}
-        onApply={handleApplyFilters}
+        current={filters}
+        onApply={(nextFilters) => updateFilters(nextFilters)}
         onClose={() => setFilterOpen(false)}
-      />
-
-      <EventModal
-        event={selectedEvent}
-        onClose={() => {
-          pendingDetailEventIdRef.current = null
-          setSelectedEvent(null)
-        }}
       />
     </main>
   )

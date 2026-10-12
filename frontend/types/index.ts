@@ -203,6 +203,7 @@ export interface VenueFilters {
   category?: VenueCategory
   city?: string
   is_featured?: boolean
+  slug?: string
   search?: string
   ordering?: string
   page?: number

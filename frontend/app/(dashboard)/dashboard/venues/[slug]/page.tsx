@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import InstagramConnectionCard from '@/components/dashboard/venues/InstagramConnectionCard'
 import { venues } from '@/lib/api'
 import { tokenStore } from '@/lib/auth'
 import { VENUE_CATEGORY_LABELS } from '@/lib/utils'
@@ -68,16 +67,6 @@ export default function VenueDetailPage() {
 
       {error && !loading && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
-      )}
-
-      {!loading && !error && venue && (
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Fuentes de eventos</h2>
-            <p className="mt-1 text-sm text-slate-500">Gestiona integraciones para importar borradores automáticamente.</p>
-          </div>
-          <InstagramConnectionCard venueSlug={venueSlug} />
-        </section>
       )}
     </div>
   )
